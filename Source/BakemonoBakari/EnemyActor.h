@@ -14,7 +14,7 @@
 #include "EnemyActor.generated.h"
 
 UCLASS()
-class POW_API AEnemyActor : public AActor
+class BAKEMONOBAKARI_API AEnemyActor : public AActor
 {
 	GENERATED_BODY()
 	
