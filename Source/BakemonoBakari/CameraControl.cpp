@@ -8,7 +8,7 @@
 
 ACameraControl::ACameraControl() :
     m_pActor(NULL),
-    m_NowDistance(0.0f),
+    m_NowDistance(800.0f),
     m_NowSpeed(0.0f),
     m_TargetPos(FVector::ZeroVector),
     m_OldPos(FVector::ZeroVector),
@@ -19,13 +19,14 @@ ACameraControl::ACameraControl() :
     m_shockMaxHeight(0.0f),
     m_shockStart(false),
     m_pPlayerActor(NULL),
-    m_AdjustmentPos(FVector::ZeroVector),
-    m_SpeedHight(0.0f),
-    m_SpeedWidth(0.0f),
-    m_Distance(0.0f),
-    m_Lengh(0.0f),
-    m_MaxPos(FVector::ZeroVector),
-    m_MinPos(FVector::ZeroVector)
+    m_AdjustmentPos(FVector(0.0f,300.0f,0.0f)),
+    m_SpeedHight(5.0f),
+    m_SpeedWidth(70.0f),
+    m_Distance(800.0f),
+    m_Lengh(150.0f),
+    m_MaxPos(FVector(2170.0f,13480.0f,550.0f)),
+    m_MinPos(FVector(2170.0f,-13480.0f, -550.0f)),
+    m_Range(FVector(500.0f,500.0f,500.0f))
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -45,6 +46,11 @@ void ACameraControl::BeginPlay()
 
     // プレイヤーを注目アクターにする
     SetTargetPlayerActor();
+
+    // カメラの初期位置を初期化
+    NoticePlayer();
+    FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
+    SetActorLocation(targetPos);
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -172,13 +178,19 @@ float ACameraControl::Measurement(FVector _a, FVector _b)
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 // 引数で渡された座標がカメラに映るかどうかを調べる-----------------------------------------------------------------------------------------------------------------------------------------------
-bool ACameraControl::CheckInCamera(FVector _pos)
+bool ACameraControl::CheckInCamera(FVector _pos,bool _player)
 {
     // カメラとの距離
     float distance = _pos.X - GetActorLocation().X;
 
     float width = distance;
     float hight = distance / 1.77777f;
+
+    if (!_player)
+    {
+        width -= m_Range.X;
+        hight -= m_Range.Y;
+    }
 
     FVector2D pos = FVector2D(GetActorLocation().Y - _pos.Y, GetActorLocation().Z - _pos.Z);
    
