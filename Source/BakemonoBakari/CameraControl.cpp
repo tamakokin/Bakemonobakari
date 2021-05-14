@@ -25,7 +25,7 @@ ACameraControl::ACameraControl() :
 	m_shockMaxHeight(0.0f),
 	m_shockStart(false),
 	m_pPlayerActor(NULL),
-	m_AdjustmentPos(FVector(0.0f, 300.0f, 0.0f)),
+	m_AdjustmentPos(FVector(0.0f, 150.0f, 100.0f)),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(70.0f),
 	m_Distance(800.0f),
@@ -142,11 +142,11 @@ void ACameraControl::NoticePlayer()
 		// プレイヤー右を向いている場合はプレイヤーより+Xの座標を注目座標に
 		if (m_pPlayerActor->GetActorRotation().Yaw >= 0)
 		{
-			m_TargetPos = m_pPlayerActor->GetActorLocation() + m_AdjustmentPos;
+			m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f,m_AdjustmentPos.Y,m_AdjustmentPos.Z);
 		}
 		else
 		{
-			m_TargetPos = m_pPlayerActor->GetActorLocation() - m_AdjustmentPos;
+			m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
 		}
 	}
 }
@@ -201,6 +201,10 @@ bool ACameraControl::CheckInCamera(FVector _pos, FVector _size)
 	// 2021 05 07 条件が間違っていたため修正
 	if ((FMath::Abs(pos.X) > FMath::Abs(width)) || (FMath::Abs(pos.Y) > FMath::Abs(hight)))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Pos%s"),*pos.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("width%f"), width);
+		UE_LOG(LogTemp, Warning, TEXT("hight%f"), hight);
+
 		return false;
 	}
 	return true;
