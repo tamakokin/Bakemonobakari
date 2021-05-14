@@ -71,10 +71,6 @@ public:
 		FVector m_MinPos;				// カメラが移動できる範囲の最小値
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_Range;				// カメラに映っていると判断する追加の範囲
-private:
-	// プレイヤーを検索する
-	void SearchPlayer();
-
 public:
 	// パラメータを外部より調整（カメラのスクロールを止めたいときはカメラ停止位置のアクターを引数に入れてこれを呼ぶ）
 
@@ -121,9 +117,12 @@ public:
 
 	// 引数で渡された座標がカメラに映るかどうかを調べる
 	UFUNCTION(BlueprintCallable, Category = "Camera Function")
-		bool CheckInCamera(FVector _pos,bool _player = false);
+		bool CheckInCamera(FVector _pos,FVector _size = FVector::ZeroVector);
 
 private:
+	// プレイヤーを検索する
+	void SearchPlayer();
+
 	// カメラが範囲外にいる場合範囲に戻す
 	void CheckInPos();
 
