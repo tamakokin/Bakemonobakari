@@ -2,9 +2,11 @@
 //更新履歴
 //2021/04/23 更新者：陳　攻撃、しゃがみについて処理
 //2021/05/07 更新者：陳　プレイヤーの基本情報（HPなど）
+//2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine.h"
 #include "GameFramework/Character.h"
 #include "BakemonoBakariCharacter.generated.h"
 
@@ -14,10 +16,10 @@ class ABakemonoBakariCharacter : public ACharacter
 	//プレイヤー情報格納用構造体 5/7
 	struct Player_Info
 	{
-		int hp;
+		float hp;
 
 		Player_Info()
-			:hp(100)
+			:hp(100.0)
 		{}
 	};
 
@@ -51,7 +53,7 @@ protected:
 
 	//ダメージを受ける処理 5/7
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
-	void TakeDamage(int _dmg);
+		void TakeDamage(float _dmg);
 
 	//攻撃しているかフラグ 4/23
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
@@ -65,6 +67,16 @@ protected:
 	//ダメージを受けているかフラグ 5/9
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		bool IsDamage;
+	//右方向に向いているかフラグ 5/10
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Direction")
+		bool IsFaceRight;
+	//飛翔距離伸びフラグ 5/14
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+		bool IsHanging;
+
+	//Overlapテスト 5/14
+	UPROPERTY(VisibleAnywhere, Category = "Overlap")
+		class UCapsuleComponent* OverlapComponent;
 
 public:
 	ABakemonoBakariCharacter();
@@ -78,6 +90,17 @@ public:
 	//HPを取得　5/7
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		int GetHP() { return m_info.hp; }
+
+	//飛翔距離が伸びる関数 5/14
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void Hang();
+
+	//Overlap関数 5/14
+	UFUNCTION()
+		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	//Overlap関数 5/14
+	UFUNCTION()
+		void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	///** Returns SideViewCameraComponent subobject **/
 	//FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
