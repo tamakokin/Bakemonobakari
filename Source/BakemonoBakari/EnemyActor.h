@@ -34,17 +34,16 @@ private:
 	// オーバーラップ関数
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
 private:
 	// 移動処理
 	void EnemyMove(float _deltaTime);
 
-	// ダメージ処理
-	void EnemyDamage();
-
 	// 攻撃処理
 	void EnemyAttack();
-
+public:
+	UFUNCTION(BlueprintCallable, Category = "Enemy Function")
+	// ダメージ処理
+	void EnemyDamage();
 
 private:
 
