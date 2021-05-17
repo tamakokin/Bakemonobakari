@@ -87,10 +87,14 @@ void ACameraControl::Tick(float DeltaTime)
 
 	if (m_Player)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("A"));
+
 		MovePlayerCamera();
 	}
 	else
 	{
+		UE_LOG(LogTemp, Warning, TEXT("B"));
+
 		MoveCamera();
 	}
 	// óhÇÍÇçsÇ§
