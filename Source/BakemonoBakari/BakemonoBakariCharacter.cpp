@@ -3,6 +3,8 @@
 // 2021/04/23 更新者：陳　攻撃について処理
 // 2021/05/04 更新者：陳　移動について処理
 // 2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
+// 2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
+// 2021/05/19 更新者：陳　無敵時間フラグ
 
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -18,6 +20,9 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	, IsDamage(false)       //ダメージフラグ 5/9
 	, IsFaceRight(true)     //右方向フラグ 5/10
 	, IsHanging(false)      //飛翔距離伸びフラグ5/14
+	, IsInvincible(false)   //無敵時間フラグ5/19
+	, IsOverlapping(false)  //オブジェクトと接触しているフラグ 5/19
+	, EnemyLocation(0.0)    //敵の水平位置 5/19
 {
 	//毎フレーム、クラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -49,7 +54,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->GravityScale = 4.0f;
 	GetCharacterMovement()->AirControl = 0.80f;
-	GetCharacterMovement()->JumpZVelocity = 350.f; //ジャンプ量調整
+	GetCharacterMovement()->JumpZVelocity = 1000.f; //ジャンプ量調整
 	GetCharacterMovement()->GroundFriction = 3.f;
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
@@ -64,6 +69,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 
 	OverlapComponent->OnComponentBeginOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapBegin);
 	OverlapComponent->OnComponentEndOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapEnd);
+	
 }
 
 void ABakemonoBakariCharacter::BeginPlay()
@@ -76,6 +82,15 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	Hang();
+
+	//Overlapしている時ダメージを受ける処理 5/20
+	if (IsOverlapping == true && IsInvincible == false)
+	{
+		TakeDamage(10.0);			//ダメージ計算
+		IsDamage = true;			//ダメージ受けている
+		IsInvincible = true;		//無敵時間に入る
+		KnockBack(EnemyLocation);	//プレイヤーがノックバックされる
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -96,7 +111,7 @@ void ABakemonoBakariCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 void ABakemonoBakariCharacter::MoveRight(float Value)
 {
-	if (IsAttack == false) //攻撃している時に移動できない　4/23
+	if (IsAttack == false && IsDamage == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
 	{
 		//FRotator StartRotation;
 		//FRotator EndRotation;
@@ -169,20 +184,39 @@ void ABakemonoBakariCharacter::TakeDamage(float _dmg)
 	}
 }
 
+//ダメージを受けたらノックバックする処理 5/17
+void ABakemonoBakariCharacter::KnockBack(float _enemylocation)
+{
+	if (_enemylocation <= UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation().Y)
+	{		
+		LaunchCharacter(FVector(0.0f, 800.f, 1000.f), false, false);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "KnockBackToleft");
+	}
+	else
+	{
+		LaunchCharacter(FVector(0.0f, -800.f, 1000.f), false, false);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "KnockBackToRight");
+	}
+}
+
 //Overlapテスト5/14
 void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
+		//Overlapするオブジェクトは敵の場合
 		if (OtherActor->ActorHasTag("Enemy"))
 		{
-			TakeDamage(10.0);
-			IsDamage = true;
+			IsOverlapping = true;								//Overlapしている
+			EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
 		}
 		if (GEngine)
 		{
 			FString TheFloatStr = FString::SanitizeFloat(m_info.hp);
+			//FString TheFloatStr_2= FString::SanitizeFloat(OtherActor->GetActorLocation().Y);
+			//FString TheFloatStr_3 = FString::SanitizeFloat(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation().Y);
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *TheFloatStr);
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "true");
 		}
 
 	}
@@ -197,6 +231,7 @@ void ABakemonoBakariCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 
 	if (OtherActor->ActorHasTag("Enemy"))
 	{
-		IsDamage = false;
+		//IsDamage = false;
+		IsOverlapping = false;	//Overlapしていない
 	}
 }
