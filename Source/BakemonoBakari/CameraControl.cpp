@@ -12,6 +12,8 @@
 #include "Engine/World.h"
 #include "Engine.h"
 
+#define ASPECT  1.77777f
+
 ACameraControl::ACameraControl() :
 	m_pActor(NULL),
 	m_NowDistance(800.0f),
@@ -19,6 +21,8 @@ ACameraControl::ACameraControl() :
 	m_TargetPos(FVector::ZeroVector),
 	m_OldPos(FVector::ZeroVector),
 	m_Player(true),
+	m_MoveHight(true),
+	m_MoveWidth(true),
 	m_shockCount(0),
 	m_shockTiming(0),
 	m_shockMaxWidth(0.0f),
@@ -29,10 +33,10 @@ ACameraControl::ACameraControl() :
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(70.0f),
 	m_Distance(800.0f),
-	m_Lengh(150.0f),
+	m_LenghWidth(400.0f),
+	m_LenghHight(100.0f),
 	m_MaxPos(FVector(2170.0f, 13480.0f, 550.0f)),
-	m_MinPos(FVector(2170.0f, -13480.0f, -550.0f)),
-	m_Range(FVector(500.0f, 500.0f, 500.0f))
+	m_MinPos(FVector(2170.0f, -13480.0f, -550.0f))
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -54,9 +58,10 @@ void ACameraControl::BeginPlay()
 	SetTargetPlayerActor();
 
 	// カメラの初期位置を初期化
-	NoticePlayer();
-	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
+	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_Distance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
 	SetActorLocation(targetPos);
+
+	NoticePlayer();
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -87,14 +92,10 @@ void ACameraControl::Tick(float DeltaTime)
 
 	if (m_Player)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("A"));
-
 		MovePlayerCamera();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("B"));
-
 		MoveCamera();
 	}
 	// 揺れを行う
@@ -112,16 +113,44 @@ void ACameraControl::Tick(float DeltaTime)
 void ACameraControl::MovePlayerCamera()
 {
 	NoticePlayer();
-	if (Measurement(m_TargetPos, GetActorLocation()) < m_Lengh)return;
 
+	// カメラの移動を行うか判定する
+	if (FMath::Abs(m_pPlayerActor->GetActorLocation().Y - GetActorLocation().Y) > m_LenghWidth)
+	{
+		m_MoveWidth = true;
+	}
+	else
+	{
+		m_MoveWidth = false;
+	}
+	if (FMath::Abs(m_pPlayerActor->GetActorLocation().Z - GetActorLocation().Z) > m_LenghHight)
+	{
+		m_MoveHight = true;
+	}
+	else 
+	{
+		m_MoveHight = false;
+	}
+
+	// 移動後の目標座標を設定
+	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_TargetPos.Y, m_TargetPos.Z);
+	FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f,0.0f);
 	if (m_pActor)
 	{
-		// 移動後の目標座標を設定
-		FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_TargetPos.Y, m_TargetPos.Z);
-		FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, (targetPos.Y - GetActorLocation().Y) / m_NowSpeed, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
-
-		SetActorLocation(GetActorLocation() + move);
+		// 横移動分を加算
+		if (m_MoveWidth)
+		{
+			move += FVector(0.0f, (targetPos.Y - GetActorLocation().Y) / m_NowSpeed, 0.0f);
+		}
+		// 縦移動分を加算
+		if (m_MoveHight)
+		{
+			move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
+		}
 	}
+
+	// 移動
+	SetActorLocation(GetActorLocation() + move);
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -194,7 +223,7 @@ bool ACameraControl::CheckInCamera(FVector _pos, FVector _size)
 	float distance = _pos.X - GetActorLocation().X;
 
 	float width = distance;
-	float hight = distance / 1.77777f;
+	float hight = distance / ASPECT;
 
 	// アクターのサイズに併せる
 	width -= _size.X;
@@ -205,10 +234,6 @@ bool ACameraControl::CheckInCamera(FVector _pos, FVector _size)
 	// 2021 05 07 条件が間違っていたため修正
 	if ((FMath::Abs(pos.X) > FMath::Abs(width)) || (FMath::Abs(pos.Y) > FMath::Abs(hight)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Pos%s"),*pos.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("width%f"), width);
-		UE_LOG(LogTemp, Warning, TEXT("hight%f"), hight);
-
 		return false;
 	}
 	return true;

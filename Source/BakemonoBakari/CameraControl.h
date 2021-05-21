@@ -41,6 +41,10 @@ private:
 	// プレイヤーの追従を行うかどうか
 	bool m_Player;
 
+	// カメラを移動させるかどうか
+	bool m_MoveHight;
+	bool m_MoveWidth;
+
 	// カメラの揺れに使用する
 	int m_shockCount;				// 揺れる回数	
 	int m_shockTiming;				// 揺れるタイミング
@@ -51,7 +55,7 @@ private:
 public:
 	// カメラが注目するアクターを取得
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		AActor* m_pPlayerActor;				// プレイヤー
+		AActor* m_pPlayerActor;			// プレイヤー
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_AdjustmentPos;		// プレイヤーを追従する際に調整に使う
@@ -62,15 +66,17 @@ public:
 		float m_SpeedWidth;				// カメラの横の移動速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_Distance;				// カメラを配置する注目アクターからの奥行の距離
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		float m_Lengh;					// 現在の座標と目標座標との距離が短いなら移動させない
+		float m_LenghWidth;				// 現在の座標とプレイヤーとの距離が長いなら移動させる
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_LenghHight;				// 現在の座標とプレイヤーとの距離が長いなら移動させる
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_MaxPos;				// カメラが移動できる範囲の最大値
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_MinPos;				// カメラが移動できる範囲の最小値
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		FVector m_Range;				// カメラに映っていると判断する追加の範囲
+
 public:
 	// パラメータを外部より調整（カメラのスクロールを止めたいときはカメラ停止位置のアクターを引数に入れてこれを呼ぶ）
 
