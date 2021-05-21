@@ -3,6 +3,8 @@
 //2021/04/23 更新者：陳　攻撃、しゃがみについて処理
 //2021/05/07 更新者：陳　プレイヤーの基本情報（HPなど）
 //2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
+//2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
+//2021/05/19 更新者：陳　無敵時間フラグ
 #pragma once
 
 #include "CoreMinimal.h"
@@ -54,6 +56,9 @@ protected:
 	//ダメージを受ける処理 5/7
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void TakeDamage(float _dmg);
+	//ダメージを受けたらノックバックする 5/17
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void KnockBack(float _enemylocation);
 
 	//攻撃しているかフラグ 4/23
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
@@ -73,6 +78,16 @@ protected:
 	//飛翔距離伸びフラグ 5/14
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 		bool IsHanging;
+	//無敵時間フラグ 5/19
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Invicible")
+		bool IsInvincible;
+	//オブジェクトと接触しているフラグ 5/19
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
+		bool IsOverlapping;
+	//敵の水平位置 5/19
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+		float EnemyLocation;
+	
 
 	//Overlapテスト 5/14
 	UPROPERTY(VisibleAnywhere, Category = "Overlap")
