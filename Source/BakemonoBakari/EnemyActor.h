@@ -2,7 +2,8 @@
 // 概要		：敵の行動プログラム(プロトタイプ
 // 作成者	：上田悠晶
 // 作成日	：2021/5/7
-// 更新履歴	：2021/5/10 プログラムを追記
+// 更新履歴	：2021/5/10 プログラムを追加
+//			：2021/5/17 エディタ側で敵の種類を文字列で変えられるように変更
 
 
 #pragma once
@@ -13,11 +14,22 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "EnemyActor.generated.h"
 
+// 敵の種類
+UENUM(BlueprintType)
+enum class ENEMY_TYPE :uint8
+{
+	ENEMY_TYPE_NONE = 0,
+	ENEMY_TYPE_STOP,
+	ENEMY_TYPE_STRAIGHT,
+	ENEMY_TYPE_JUMP,
+	ENEMY_TYPE_FRY,
+};
+
 UCLASS()
 class BAKEMONOBAKARI_API AEnemyActor : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	// コンストラクタ
 	AEnemyActor();
@@ -40,14 +52,19 @@ private:
 
 	// 攻撃処理
 	void EnemyAttack();
+
+	// プレイヤーに当たった時の処理
+	void EnemyStop();
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Function")
-	// ダメージ処理
-	void EnemyDamage();
+		// ダメージ処理
+		void EnemyDamage();
 
 private:
 
 	// エネミーのステータス
+
 	enum ENEMY_STATE
 	{
 		ENEMY_STATE_NONE = 0,
@@ -55,16 +72,6 @@ private:
 		ENEMY_STATE_IDLE,
 		ENEMY_STATE_DAMAGE,
 		ENEMY_STATE_STOP,
-	};
-
-	// 敵の種類
-	enum ENEMY_TYPE
-	{
-		ENEMY_TYPE_NONE = 0,
-		ENEMY_TYPE_STOP,
-		ENEMY_TYPE_STRAIGHT,
-		ENEMY_TYPE_JUMP,
-		ENEMY_TYPE_FRY,
 	};
 
 public:
@@ -82,10 +89,16 @@ private:
 
 private:
 	UPROPERTY(EditAnywhere)
-		float m_moveSpeedX;		// 進行方向のスピード
+		float m_moveSpeedY;		// 進行方向のスピード
 
 	UPROPERTY(EditAnywhere)
-		float m_moveSpeedY;		// 上方向の移動量
+		float m_moveRangeY;		// 進行方向の範囲
+
+	UPROPERTY(EditAnywhere)
+		float m_InitVelocityZ;	// 上方向の初速
+
+	UPROPERTY(EditAnywhere)
+		float m_JumpGravity;	// 重力加速度
 
 	UPROPERTY(EditAnywhere)
 		float m_altitudeLimit;	// 最大高度
@@ -94,11 +107,22 @@ private:
 		float m_EnemyHP;		// 敵のＨＰ
 
 	UPROPERTY(EditAnywhere)
-		float m_EnemyType_Any;	// 敵の種類入力用
+		float m_JumpWait;		// ジャンプするまでの待機時間
+
+	UPROPERTY(EditAnywhere)
+		ENEMY_TYPE m_EnemyType;	// 敵の種類
+
 
 
 private:
+	float	m_EnemyJumpDeltaTime;
+	bool	m_StraightVector;
+	bool	m_SwitchVector;
+
+	FVector m_initEnemyPosition;
+	FVector m_prevEnemyPosition;
+
+private:
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス
-	ENEMY_TYPE m_EnemyType;				// 敵の種類
 	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
 };

@@ -3,6 +3,7 @@
 // 作成者	：上田悠晶
 // 作成日	：2021/5/7
 // 更新履歴	：2021/5/10 プログラムのコメントを追記
+//			：2021/5/17 ジャンプする敵の行動プログラムを追加
 
 #include "EnemyActor.h"
 
@@ -12,8 +13,12 @@ AEnemyActor::AEnemyActor()
 	, m_pCapsuleComp(NULL)
 	, m_pBase(NULL)
 	, m_EnemyState(ENEMY_STATE_IDLE)
-	, m_EnemyType(ENEMY_TYPE_NONE)
 	, m_pOverlappedActor(NULL)
+	, m_EnemyJumpDeltaTime(0.f)
+	, m_initEnemyPosition(FVector::ZeroVector)
+	, m_prevEnemyPosition(FVector::ZeroVector)
+	, m_StraightVector(false)
+	, m_SwitchVector(false)
 {
 	// 毎フレーム、このクラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -39,9 +44,8 @@ void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 入力した敵の種類をプロパティに反映
-	m_EnemyType = (ENEMY_TYPE)m_EnemyType_Any;
-	
+	// 初期位置の取得
+	m_initEnemyPosition = GetActorLocation();
 }
 
 // 毎フレームの処理
@@ -54,6 +58,9 @@ void AEnemyActor::Tick(float DeltaTime)
 	{
 		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
+
+	// 移動関数
+	EnemyMove(DeltaTime);
 }
 
 // オーバーラップ関数
@@ -73,10 +80,10 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 		}
 
 		// 接触したアクターのタグがプレイヤーであれば
-		else if (m_pOverlappedActor->ActorHasTag("Player"))
+		else if (m_pOverlappedActor->ActorHasTag("PlayerCharacter"))
 		{
 			// 動きを止める
-			// moveStop();
+			EnemyStop();
 		}
 	}
 	m_pOverlappedActor = NULL;
@@ -90,33 +97,99 @@ void AEnemyActor::EnemyMove(float _deltaTime)
 	if (m_EnemyState == ENEMY_STATE_DAMAGE) return;
 
 	FVector tempEnemyPosition = GetActorLocation();
+	FRotator tempEnemyRotation = GetActorRotation();
 
 	switch (m_EnemyType)
 	{
 
-	case AEnemyActor::ENEMY_TYPE_NONE:		// ダミー
+	case ENEMY_TYPE::ENEMY_TYPE_NONE:		// ダミー
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_STOP:		// 動かない敵
+	case ENEMY_TYPE::ENEMY_TYPE_STOP:		// 動かない敵
 		// 動かない
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_STRAIGHT:	// 真っすぐ突っ込んでくる敵
+	case ENEMY_TYPE::ENEMY_TYPE_STRAIGHT:	// 真っすぐ突っ込んでくる敵
 
-		// エネミーの位置情報を取得
-		tempEnemyPosition.X += m_moveSpeedX;
+		// 方向転換
+		if (m_SwitchVector)
+		{
+			if (!m_StraightVector)
+			{
+				// 前向き
+				tempEnemyRotation.Yaw = 90.f;
+			}
+			else
+			{
+				// 後ろ向き
+				tempEnemyRotation.Yaw = 270.f;
+			}
+
+			m_SwitchVector = false;
+			SetActorRotation(tempEnemyRotation);
+		}
+
+		m_prevEnemyPosition = tempEnemyPosition;
+
+		// 進む方向に応じて
+		if (!m_StraightVector)
+		{
+			// 前進
+			tempEnemyPosition.Y += m_moveSpeedY;
+		}
+		else
+		{
+			// 後退
+			tempEnemyPosition.Y -= m_moveSpeedY;
+		}
+
 		// 修正後のアクター位置を設定
 		SetActorLocation(tempEnemyPosition);
+
+		// 可動範囲を超えたら
+		if (tempEnemyPosition.Y > (m_initEnemyPosition.Y + m_moveRangeY) || tempEnemyPosition.Y < m_initEnemyPosition.Y)
+		{
+			m_SwitchVector = true;
+			m_StraightVector = !m_StraightVector;
+		}
 
 		//---------------------------------------------------------------
 		// 段差があったら乗り越えるみたいなプログラムがあってもいいかも
 		//---------------------------------------------------------------
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_JUMP:		// ジャンプしてくる敵
+	case ENEMY_TYPE::ENEMY_TYPE_JUMP:		// ジャンプしてくる敵
+
+		// 時間をカウント
+		m_EnemyJumpDeltaTime += _deltaTime;
+
+		// 待機時間を超えるまで動かない
+		if (m_EnemyJumpDeltaTime < m_JumpWait)	return;
+
+		UE_LOG(LogTemp, Warning, TEXT("jumping"));
+
+		// 変位Y
+		float tempDeltaZ;
+
+		// 鉛直投げ上げ
+		tempDeltaZ = (m_InitVelocityZ - 0.5 * m_JumpGravity * ((m_EnemyJumpDeltaTime - m_JumpWait) * (m_EnemyJumpDeltaTime - m_JumpWait)));
+		tempEnemyPosition.Z += tempDeltaZ;
+
+		// 初期位置より下に行った場合補正してリターン
+		if (tempEnemyPosition.Z < m_initEnemyPosition.Z)
+		{
+			// 初期位置の戻ったら時間の初期化
+			SetActorLocation(tempEnemyPosition);
+			m_EnemyJumpDeltaTime = 0.f;
+			return;
+		}
+
+		// 値の反映
+		SetActorLocation(tempEnemyPosition);
+
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_FRY:		// 空を飛ぶ敵
+	case ENEMY_TYPE::ENEMY_TYPE_FRY:		// 空を飛ぶ敵
 		//---------------------------------------------------------------
 		// 今後によって書き換えます
 		//---------------------------------------------------------------
@@ -139,19 +212,35 @@ void AEnemyActor::EnemyAttack()
 	switch (m_EnemyType)
 	{
 
-	case AEnemyActor::ENEMY_TYPE_NONE:		// ダミー
+	case ENEMY_TYPE::ENEMY_TYPE_NONE:		// ダミー
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_STOP:		// 動かない敵
+	case ENEMY_TYPE::ENEMY_TYPE_STOP:		// 動かない敵
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_STRAIGHT:	// 真っすぐ突っ込んでくる敵
+	case ENEMY_TYPE::ENEMY_TYPE_STRAIGHT:	// 真っすぐ突っ込んでくる敵
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_JUMP:		// ジャンプしてくる敵
+	case ENEMY_TYPE::ENEMY_TYPE_JUMP:		// ジャンプしてくる敵
 		break;
 
-	case AEnemyActor::ENEMY_TYPE_FRY:		// 空を飛ぶ敵
+	case ENEMY_TYPE::ENEMY_TYPE_FRY:		// 空を飛ぶ敵
+		break;
+
+	default:
+		break;
+	}
+}
+
+// プレイヤーに当たった時の処理
+void AEnemyActor::EnemyStop()
+{
+	switch (m_EnemyType)
+	{
+	case ENEMY_TYPE::ENEMY_TYPE_STRAIGHT:	// 真っすぐ突っ込んでくる敵
+		// 方向転換
+		m_SwitchVector = true;
+		m_StraightVector = !m_StraightVector;
 		break;
 
 	default:
