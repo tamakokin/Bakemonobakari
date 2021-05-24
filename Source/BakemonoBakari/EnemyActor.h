@@ -4,6 +4,7 @@
 // 作成日	：2021/5/7
 // 更新履歴	：2021/5/10 プログラムを追加
 //			：2021/5/17 エディタ側で敵の種類を文字列で変えられるように変更
+//			：2021/5/23 消滅時の音を追加（伴野）
 
 
 #pragma once
@@ -80,6 +81,9 @@ public:
 		UCapsuleComponent* m_pCapsuleComp;		//	ターゲット接触用コリジョン
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USkeletalMeshComponent* m_pEnemyMesh;	// メッシュ
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class USoundBase* m_crashSound;			// 消滅時の音
 
 private:
 	UPROPERTY()
