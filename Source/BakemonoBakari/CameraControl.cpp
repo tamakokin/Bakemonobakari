@@ -58,7 +58,7 @@ void ACameraControl::BeginPlay()
 	SetTargetPlayerActor();
 
 	// ƒJƒƒ‰‚Ì‰ŠúˆÊ’u‚ð‰Šú‰»
-	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_Distance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
+	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_Distance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z) + m_AdjustmentPos;
 	SetActorLocation(targetPos);
 
 	NoticePlayer();

@@ -4,7 +4,9 @@
 // 作成日	：2021/5/7
 // 更新履歴	：2021/5/10 プログラムのコメントを追記
 //			：2021/5/17 ジャンプする敵の行動プログラムを追加
+//			：2021/5/23 消滅時の音を追加（伴野）
 
+#include "Kismet/GameplayStatics.h"
 #include "EnemyActor.h"
 
 // Sets default values
@@ -268,6 +270,14 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		//死亡エフェクト生成が入る
 		//------------------------------------------------
+
+
+		// 攻撃音を出す
+		if (m_crashSound != NULL)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
+		}
+
 		Destroy();
 	}
 }
