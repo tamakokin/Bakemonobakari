@@ -187,14 +187,18 @@ void ABakemonoBakariCharacter::TakeDamage(float _dmg)
 //ダメージを受けたらノックバックする処理 5/17
 void ABakemonoBakariCharacter::KnockBack(float _enemylocation)
 {
+	//プレイヤーの速度を0にする 5/24
+	GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
+
+	//プレイヤーに敵の位置によってノックバックフォースを与える
 	if (_enemylocation <= UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation().Y)
 	{		
-		LaunchCharacter(FVector(0.0f, 800.f, 1000.f), false, false);
+		LaunchCharacter(FVector(0.0f, 800.f, 800.f), false, false);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "KnockBackToleft");
 	}
 	else
 	{
-		LaunchCharacter(FVector(0.0f, -800.f, 1000.f), false, false);
+		LaunchCharacter(FVector(0.0f, -800.f, 800.f), false, false);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "KnockBackToRight");
 	}
 }
