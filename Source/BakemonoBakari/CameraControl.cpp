@@ -8,6 +8,7 @@
 // カメラ内に入っているかを調べる更新
 
 #include "CameraControl.h"
+#include "CameraSpline.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
 #include "Engine.h"
@@ -18,7 +19,6 @@ ACameraControl::ACameraControl() :
 	m_pActor(NULL),
 	m_NowDistance(800.0f),
 	m_NowSpeed(0.0f),
-	m_TargetPos(FVector::ZeroVector),
 	m_OldPos(FVector::ZeroVector),
 	m_Player(true),
 	m_MoveHight(true),
@@ -28,8 +28,8 @@ ACameraControl::ACameraControl() :
 	m_shockMaxWidth(0.0f),
 	m_shockMaxHeight(0.0f),
 	m_shockStart(false),
-	m_pPlayerActor(NULL),
 	m_AdjustmentPos(FVector(0.0f, 150.0f, 100.0f)),
+	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(70.0f),
 	m_Distance(800.0f),
@@ -56,12 +56,13 @@ void ACameraControl::BeginPlay()
 
 	// プレイヤーを注目アクターにする
 	SetTargetPlayerActor();
+	m_pSpline->Start();
 
 	// カメラの初期位置を初期化
-	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_Distance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z) + m_AdjustmentPos;
-	SetActorLocation(targetPos);
+	FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
+	SetActorLocation(m_pSpline->GetPlayerPos());
 
-	NoticePlayer();
+	//NoticePlayer();
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -77,9 +78,9 @@ void ACameraControl::SearchPlayer()
 	// プレイヤーを取得する
 	for (int i = 0; i < actors.Num(); i++)
 	{
-		if (actors[i]->ActorHasTag("Player"))
+		if (actors[i]->ActorHasTag("Spline"))
 		{
-			m_pPlayerActor = actors[i];
+			m_pSpline = Cast<ACameraSpline>(actors[i]);
 			break;
 		}
 	}
@@ -112,10 +113,13 @@ void ACameraControl::Tick(float DeltaTime)
 // カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::MovePlayerCamera()
 {
+	if (!m_pSpline)return;
+
 	NoticePlayer();
+	m_TargetPos = m_pSpline->GetTargetPos();
 
 	// カメラの移動を行うか判定する
-	if (FMath::Abs(m_pPlayerActor->GetActorLocation().Y - GetActorLocation().Y) > m_LenghWidth)
+	if (FMath::Abs(m_TargetPos.Y - GetActorLocation().Y) > m_LenghWidth)
 	{
 		m_MoveWidth = true;
 	}
@@ -123,7 +127,7 @@ void ACameraControl::MovePlayerCamera()
 	{
 		m_MoveWidth = false;
 	}
-	if (FMath::Abs(m_pPlayerActor->GetActorLocation().Z - GetActorLocation().Z) > m_LenghHight)
+	if (FMath::Abs(m_TargetPos.Z - GetActorLocation().Z) > m_LenghHight)
 	{
 		m_MoveHight = true;
 	}
@@ -133,9 +137,10 @@ void ACameraControl::MovePlayerCamera()
 	}
 
 	// 移動後の目標座標を設定
-	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_TargetPos.Y, m_TargetPos.Z);
+	FVector targetPos = FVector(m_TargetPos.X + m_NowDistance, m_TargetPos.Y, m_TargetPos.Z);
 	FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f,0.0f);
-	if (m_pActor)
+
+	if (m_pSpline)
 	{
 		// 横移動分を加算
 		if (m_MoveWidth)
@@ -148,9 +153,8 @@ void ACameraControl::MovePlayerCamera()
 			move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
 		}
 	}
-
 	// 移動
-	SetActorLocation(GetActorLocation() + move);
+	SetActorLocation(GetActorLocation()+ move);
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -170,18 +174,18 @@ void ACameraControl::MoveCamera()
 // プレイヤーの向いている方向に合わせてカメラの中心座標を変更//-----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::NoticePlayer()
 {
-	if (m_pPlayerActor)
-	{
-		// プレイヤー右を向いている場合はプレイヤーより+Xの座標を注目座標に
-		if (m_pPlayerActor->GetActorRotation().Yaw >= 0)
-		{
-			m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f,m_AdjustmentPos.Y,m_AdjustmentPos.Z);
-		}
-		else
-		{
-			m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
-		}
-	}
+	//if (m_pPlayerActor)
+	//{
+	//	// プレイヤー右を向いている場合はプレイヤーより+Xの座標を注目座標に
+	//	if (m_pPlayerActor->GetActorRotation().Yaw >= 0)
+	//	{
+	//		m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f,m_AdjustmentPos.Y,m_AdjustmentPos.Z);
+	//	}
+	//	else
+	//	{
+	//		m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+	//	}
+	//}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 // カメラを揺らす-----------------------------------------------------------------------------------------------------------------------------------------------
