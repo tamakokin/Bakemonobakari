@@ -6,6 +6,7 @@
 //			：2021/5/17 エディタ側で敵の種類を文字列で変えられるように変更
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/24 様々な敵形態を追加
+//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 
 
 #pragma once
@@ -15,6 +16,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnemyActor.generated.h"
+
+class UCheckInScreen;
 
 // 敵の種類
 UENUM(BlueprintType)
@@ -141,4 +144,6 @@ private:
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス
 	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
 	AActor* m_pPlayerCharacter;
+
+	UCheckInScreen* m_pCheckInScreen;
 };
