@@ -23,6 +23,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	, IsHanging(false)      //飛翔距離伸びフラグ5/14
 	, IsInvincible(false)   //無敵時間フラグ5/19
 	, IsDead(false)			//死亡フラグ5/26
+	, IsFallDead(false)     //転落死亡フラグ 5/28
 	, IsOverlapping(false)  //オブジェクトと接触しているフラグ 5/19
 	, EnemyLocation(0.0)    //敵の水平位置 5/19
 {
@@ -92,6 +93,14 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 		IsDamage = true;			//ダメージ受けている
 		IsInvincible = true;		//無敵時間に入る
 		KnockBack(EnemyLocation);	//プレイヤーがノックバックされる
+	}
+	//転落死亡の処理 5/28
+	else if (IsFallDead == true)
+	{
+		TakeDamage(100.0);			//ダメージ計算
+		IsDamage = true;			//ダメージ受けている
+		GetCharacterMovement()->GravityScale = 0.0f;
+		GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
 	}
 }
 
@@ -219,6 +228,12 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		{
 			IsOverlapping = true;								//Overlapしている
 			EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
+		}
+		//Overlapするオブジェクトは落し穴の場合
+		else if (OtherActor->ActorHasTag("Hole"))
+		{
+			IsOverlapping = true;
+			IsFallDead = true;
 		}
 		if (GEngine)
 		{

@@ -85,6 +85,9 @@ protected:
 	//HPが0になっているかフラグ 5/26
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		bool IsDead;
+	//転落死亡フラグ 5/28
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+		bool IsFallDead;
 	//オブジェクトと接触しているフラグ 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
 		bool IsOverlapping;
