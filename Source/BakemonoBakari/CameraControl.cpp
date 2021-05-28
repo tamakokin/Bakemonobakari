@@ -106,7 +106,7 @@ void ACameraControl::Tick(float DeltaTime)
 	}
 
 	// ƒJƒƒ‰‚ª”ÍˆÍ‚ğ’´‚¦‚È‚¢‚æ‚¤‚É‚·‚é
-	CheckInPos();
+	//CheckInPos();
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -148,7 +148,7 @@ void ACameraControl::MovePlayerCamera()
 			move += FVector(0.0f, (targetPos.Y - GetActorLocation().Y) / m_NowSpeed, 0.0f);
 		}
 		// cˆÚ“®•ª‚ğ‰ÁZ
-		if (m_MoveHight)
+		//if (m_MoveHight)
 		{
 			move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
 		}
