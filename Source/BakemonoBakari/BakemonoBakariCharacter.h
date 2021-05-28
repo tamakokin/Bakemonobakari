@@ -5,6 +5,7 @@
 //2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
 //2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
 //2021/05/19 更新者：陳　無敵時間フラグ
+//2021/05/26 更新者：陳　HPが0になった時の処理
 #pragma once
 
 #include "CoreMinimal.h"
@@ -81,6 +82,9 @@ protected:
 	//無敵時間フラグ 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Invicible")
 		bool IsInvincible;
+	//HPが0になっているかフラグ 5/26
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+		bool IsDead;
 	//オブジェクトと接触しているフラグ 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
 		bool IsOverlapping;

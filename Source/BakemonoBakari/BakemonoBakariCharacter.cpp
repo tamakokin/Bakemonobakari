@@ -5,6 +5,7 @@
 // 2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
 // 2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
 // 2021/05/19 更新者：陳　無敵時間フラグ
+// 2021/05/26 更新者：陳　HPが0になった時の処理
 
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -21,6 +22,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	, IsFaceRight(true)     //右方向フラグ 5/10
 	, IsHanging(false)      //飛翔距離伸びフラグ5/14
 	, IsInvincible(false)   //無敵時間フラグ5/19
+	, IsDead(false)			//死亡フラグ5/26
 	, IsOverlapping(false)  //オブジェクトと接触しているフラグ 5/19
 	, EnemyLocation(0.0)    //敵の水平位置 5/19
 {
@@ -84,7 +86,7 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 	Hang();
 
 	//Overlapしている時ダメージを受ける処理 5/20
-	if (IsOverlapping == true && IsInvincible == false)
+	if (IsOverlapping == true && IsInvincible == false && IsDead == false)
 	{
 		TakeDamage(10.0);			//ダメージ計算
 		IsDamage = true;			//ダメージ受けている
@@ -111,7 +113,7 @@ void ABakemonoBakariCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 void ABakemonoBakariCharacter::MoveRight(float Value)
 {
-	if (IsAttack == false && IsDamage == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
+	if (IsAttack == false && IsDamage == false && IsDead == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
 	{
 		//FRotator StartRotation;
 		//FRotator EndRotation;
@@ -170,7 +172,9 @@ void ABakemonoBakariCharacter::Hang()
 //攻撃入力関数 4/23
 void ABakemonoBakariCharacter::Attack()
 {
-	IsAttack = true;
+	if (!IsDamage && !IsDead) {
+		IsAttack = true;
+	}
 }
 
 //ダメージを受ける処理 5/7
@@ -178,9 +182,11 @@ void ABakemonoBakariCharacter::TakeDamage(float _dmg)
 {
 	m_info.hp -= _dmg;
 
-	if (m_info.hp < 0)
+	if (m_info.hp <= 0)
 	{
 		m_info.hp = 0;
+		//HPが0になると死亡状態になる
+		IsDead = true;
 	}
 }
 
