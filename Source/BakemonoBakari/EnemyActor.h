@@ -5,6 +5,7 @@
 // 更新履歴	：2021/5/10 プログラムを追加
 //			：2021/5/17 エディタ側で敵の種類を文字列で変えられるように変更
 //			：2021/5/23 消滅時の音を追加（伴野）
+//			：2021/5/24 様々な敵形態を追加
 
 
 #pragma once
@@ -20,10 +21,12 @@ UENUM(BlueprintType)
 enum class ENEMY_TYPE :uint8
 {
 	ENEMY_TYPE_NONE = 0,
-	ENEMY_TYPE_STOP,
-	ENEMY_TYPE_STRAIGHT,
-	ENEMY_TYPE_JUMP,
-	ENEMY_TYPE_FRY,
+	ENEMY_TYPE_STOP,			// 動かない
+	ENEMY_TYPE_STRAIGHT,		// まっすぐ移動
+	ENEMY_TYPE_JUMP,			// その場でジャンプ
+	ENEMY_TYPE_JUMP_STRAIGHT,	// 移動しながらジャンプ
+	ENEMY_TYPE_FIRING,			// 弾発射
+	ENEMY_TYPE_FRY,				// 飛ぶ
 };
 
 UCLASS()
@@ -52,7 +55,7 @@ private:
 	void EnemyMove(float _deltaTime);
 
 	// 攻撃処理
-	void EnemyAttack();
+	void EnemyAttack(float _deltaTime);
 
 	// プレイヤーに当たった時の処理
 	void EnemyStop();
@@ -92,26 +95,32 @@ private:
 		FName m_tagName;				// タグ名
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_moveSpeedY;		// 進行方向のスピード
 
 	UPROPERTY(EditAnywhere)
 		float m_moveRangeY;		// 進行方向の範囲
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 10.f))
 		float m_InitVelocityZ;	// 上方向の初速
 
 	UPROPERTY(EditAnywhere)
+		float m_ChangeVectorTolerance;		// プレイヤーに当たった際の方向転換の許容移動範囲
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 29.4f))
 		float m_JumpGravity;	// 重力加速度
 
 	UPROPERTY(EditAnywhere)
 		float m_altitudeLimit;	// 最大高度
 
-	UPROPERTY(EditAnywhere)
-		float m_EnemyHP;		// 敵のＨＰ
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
+		int m_EnemyHP;		// 敵のＨＰ
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_JumpWait;		// ジャンプするまでの待機時間
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
+		float m_AttackDelay;		// 攻撃までの待機時間
 
 	UPROPERTY(EditAnywhere)
 		ENEMY_TYPE m_EnemyType;	// 敵の種類
@@ -119,14 +128,17 @@ private:
 
 
 private:
-	float	m_EnemyJumpDeltaTime;
-	bool	m_StraightVector;
-	bool	m_SwitchVector;
+	float	m_EnemyJumpDeltaTime;			// ジャンプしている時間
+	float	m_EnemyMovingDistance;			// 向いている方向に移動した距離
+	float	m_EnemyAttackingTime;			// 攻撃した後のディレイ
+	bool	m_StraightVector;				// 向いている方向
+	bool	m_SwitchVector;					// 右左のどちらを向いているかのフラグ
 
-	FVector m_initEnemyPosition;
-	FVector m_prevEnemyPosition;
+	FVector m_initEnemyPosition;			// 初期位置
+	FVector m_prevEnemyPosition;			// 1フレーム前の自身の位置
 
 private:
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス
 	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
+	AActor* m_pPlayerCharacter;
 };
