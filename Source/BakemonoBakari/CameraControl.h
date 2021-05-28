@@ -8,6 +8,8 @@
 #include "GameFramework/Actor.h"
 #include "CameraControl.generated.h"
 
+class ACameraSpline;
+
 UCLASS()
 class BAKEMONOBAKARI_API ACameraControl : public AActor
 {
@@ -33,8 +35,6 @@ private:
 	float m_NowDistance;				// 現在カメラを配置する注目アクターからの奥行の距離
 	float m_NowSpeed;					// カメラの現在の移動速度
 
-	FVector m_TargetPos;
-
 	// 前回の目標座標
 	FVector m_OldPos;
 
@@ -53,12 +53,15 @@ private:
 	bool m_shockStart;				// カメラを揺らすかどうか
 
 public:
-	// カメラが注目するアクターを取得
+	// カメラ移動に使用するスプラインの座標を取得する
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		AActor* m_pPlayerActor;			// プレイヤー
+		ACameraSpline* m_pSpline;		// スプライン
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_AdjustmentPos;		// プレイヤーを追従する際に調整に使う
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		FVector m_TargetPos;			// 注目するアクターの座標
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_SpeedHight;				// カメラの縦の移動速度
@@ -82,7 +85,7 @@ public:
 
 	// カメラの移動をする際に追従するアクター、移動速度に設定する
 	UFUNCTION(BlueprintCallable, Category = "Camera Function")
-		void SetTargetActor(AActor* _targtActor, float _speed = 20.0f)
+	void SetTargetActor(AActor* _targtActor, float _speed = 20.0f)
 	{
 		m_pActor = _targtActor;
 		m_NowSpeed = _speed;
@@ -91,9 +94,8 @@ public:
 
 	// プレイヤーを追従するように設定する
 	UFUNCTION(BlueprintCallable, Category = "Camera Function")
-		void SetTargetPlayerActor()
+	void SetTargetPlayerActor()
 	{
-		m_pActor = m_pPlayerActor;
 		m_NowSpeed = m_SpeedWidth;
 		m_Player = true;
 	}
