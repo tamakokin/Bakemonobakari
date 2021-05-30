@@ -5,10 +5,11 @@
 // 更新履歴	：2021/5/10 プログラムのコメントを追記
 //			：2021/5/17 ジャンプする敵の行動プログラムを追加
 //			：2021/5/23 消滅時の音を追加（伴野）
+//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 
 #include "Kismet/GameplayStatics.h"
 #include "EnemyActor.h"
-
+#include "CheckInScreen.h"
 // Sets default values
 AEnemyActor::AEnemyActor()
 	: m_pEnemyMesh(NULL)
@@ -42,6 +43,11 @@ AEnemyActor::AEnemyActor()
 	m_pCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionComp"));
 	m_pCapsuleComp->SetupAttachment(RootComponent);
 
+	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
+	// 画面何にいるかを判別するコンポーネントの生成
+	m_pCheckInScreen = CreateDefaultSubobject<UCheckInScreen>(TEXT("CheckInScreen"));
+
+	//m_pCheckInScreen = Cast<UCheckInScreen>(this);
 }
 
 // ゲームスタート時、または生成時に呼ばれる処理
@@ -66,6 +72,12 @@ void AEnemyActor::Tick(float DeltaTime)
 		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
 
+	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
+	if (!m_pCheckInScreen->Check(GetActorLocation())) 
+	{ 
+		UE_LOG(LogTemp, Warning, TEXT("AAAA"));
+		return; 
+	}
 	// 移動関数
 	EnemyMove(DeltaTime);
 
