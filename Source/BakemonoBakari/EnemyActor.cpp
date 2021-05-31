@@ -95,7 +95,7 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 	if (m_pOverlappedActor != NULL)
 	{
 		// 接触したアクターのタグがプレイヤーの攻撃であれば
-		if (m_pOverlappedActor->ActorHasTag("PlayerAttack"))
+		if (OtherComp->ComponentHasTag("PlayerAttack"))
 		{
 			// ダメージを与える
 			EnemyDamage();
