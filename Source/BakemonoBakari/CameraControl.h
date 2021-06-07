@@ -55,7 +55,7 @@ private:
 public:
 	// カメラ移動に使用するスプラインの座標を取得する
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		ACameraSpline* m_pSpline;		// スプライン
+		TArray<ACameraSpline*> m_pSpline;		// スプライン
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		FVector m_AdjustmentPos;		// プレイヤーを追従する際に調整に使う
