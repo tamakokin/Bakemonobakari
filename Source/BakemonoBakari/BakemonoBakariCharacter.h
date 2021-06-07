@@ -6,6 +6,7 @@
 //2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
 //2021/05/19 更新者：陳　無敵時間フラグ
 //2021/05/26 更新者：陳　HPが0になった時の処理
+//2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
 #pragma once
 
 #include "CoreMinimal.h"
@@ -95,6 +96,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		float EnemyLocation;
 	
+	//フェードイン時の入力不可フラグ 6/7伴野
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		bool IsInputFadeIn;
 
 	//Overlapテスト 5/14
 	UPROPERTY(VisibleAnywhere, Category = "Overlap")
@@ -116,6 +120,10 @@ public:
 	//飛翔距離が伸びる関数 5/14
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void Hang();
+
+	//フェードイン時の入力不可フラグを設定 6/7伴野
+	UFUNCTION(BlueprintCallable, Category = "Input")
+		void SetInputFadeIn(bool b) { IsInputFadeIn = b; }
 
 	//Overlap関数 5/14
 	UFUNCTION()

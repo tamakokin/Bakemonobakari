@@ -6,6 +6,7 @@
 // 2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
 // 2021/05/19 更新者：陳　無敵時間フラグ
 // 2021/05/26 更新者：陳　HPが0になった時の処理
+// 2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
 
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -18,6 +19,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	: IsAttack(false)       //攻撃フラグ 4/23
 	, IsJump(false)         //ジャンプフラグ 4/23
 	, IsCrouch(false)       //しゃがみフラグ 4/23
+	, IsInputFadeIn(true)	//フェードイン時の入力不可フラグ 6/7
 	, IsDamage(false)       //ダメージフラグ 5/9
 	, IsFaceRight(true)     //右方向フラグ 5/10
 	, IsHanging(false)      //飛翔距離伸びフラグ5/14
@@ -122,32 +124,35 @@ void ABakemonoBakariCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 void ABakemonoBakariCharacter::MoveRight(float Value)
 {
-	if (IsAttack == false && IsDamage == false && IsDead == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
+	if (IsInputFadeIn == false)	//フェードイン時は移動できない
 	{
-		//FRotator StartRotation;
-		//FRotator EndRotation;
-		//StartRotation = GetActorRotation();
-		//EndRotation = GetActorRotation();
-		//EndRotation.Yaw = StartRotation.Yaw;
+		if (IsAttack == false && IsDamage == false && IsDead == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
+		{
+			//FRotator StartRotation;
+			//FRotator EndRotation;
+			//StartRotation = GetActorRotation();
+			//EndRotation = GetActorRotation();
+			//EndRotation.Yaw = StartRotation.Yaw;
 
-		if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
-		{
-			//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
-			//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
-			SetActorRotation(FRotator(0.f, -90.f, 0.f));
-			// add movement in that direction
-			AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-			IsFaceRight = true;
-		}
-		else
-		{
-			if (Value < 0.0)
+			if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
 			{
+				//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
 				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
-				SetActorRotation(FRotator(0.f, 90.f, 0.f));
+				SetActorRotation(FRotator(0.f, -90.f, 0.f));
 				// add movement in that direction
 				AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-				IsFaceRight = false;
+				IsFaceRight = true;
+			}
+			else
+			{
+				if (Value < 0.0)
+				{
+					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+					SetActorRotation(FRotator(0.f, 90.f, 0.f));
+					// add movement in that direction
+					AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+					IsFaceRight = false;
+				}
 			}
 		}
 	}
@@ -181,8 +186,11 @@ void ABakemonoBakariCharacter::Hang()
 //攻撃入力関数 4/23
 void ABakemonoBakariCharacter::Attack()
 {
-	if (!IsDamage && !IsDead) {
-		IsAttack = true;
+	if (IsInputFadeIn == false)	//フェードイン時
+	{
+		if (!IsDamage && !IsDead) {
+			IsAttack = true;
+		}
 	}
 }
 
