@@ -50,6 +50,7 @@ protected:
 public:
 	// 毎フレームの処理
 	virtual void Tick(float DeltaTime) override;
+
 	// 死亡処理
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
 		void Des();
@@ -76,6 +77,9 @@ private:
 	// 攻撃処理
 	void EnemyAttack(float _deltaTime);
 
+	// アニメーション変更処理
+	void ChangeAnim();
+
 	// プレイヤーに当たった時の処理
 	void EnemyStop();
 
@@ -86,6 +90,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
 		// ダメージ処理
 		void EnemyDamageEvent();
+
 
 // アニメーション管理用
 private:	
@@ -124,6 +129,7 @@ private:
 		ENEMY_STATE_IDLE,
 		ENEMY_STATE_ATTACK,
 		ENEMY_STATE_DAMAGE,
+		ENEMY_STATE_DESTROY,
 		ENEMY_STATE_STOP,
 	};
 
@@ -145,36 +151,42 @@ private:
 
 private:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_moveSpeedY;					// 進行方向のスピード
+		float m_moveSpeedY;		// 進行方向のスピード
 
 	UPROPERTY(EditAnywhere)
-		float m_moveRangeY;					// 進行方向の範囲
+		float m_moveRangeY;		// 進行方向の範囲
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 10.f))
-		float m_InitVelocityZ;				// 上方向の初速
+		float m_InitVelocityZ;	// 上方向の初速
 
 	UPROPERTY(EditAnywhere)
 		float m_ChangeVectorTolerance;		// プレイヤーに当たった際の方向転換の許容移動範囲
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 29.4f))
-		float m_JumpGravity;				// 重力加速度
+		float m_JumpGravity;	// 重力加速度
 
-	UPROPERTY(EditAnywhere)	
-		float m_altitudeLimit;				// 最大高度
-
+	UPROPERTY(EditAnywhere)
+		float m_altitudeLimit;	// 最大高度
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
 		int m_EnemyHPMax;		// 敵の最大ＨＰ
 
 	int m_EnemyHP;				// 敵の現在のHP
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_JumpWait;					// ジャンプするまでの待機時間
+		float m_JumpWait;		// ジャンプするまでの待機時間
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_AttackDelay;				// 攻撃までの待機時間
+		float m_AttackDelay;		// 攻撃までの待機時間
 
 	UPROPERTY(EditAnywhere)
-		ENEMY_TYPE m_EnemyType;				// 敵の種類
+		ENEMY_TYPE m_EnemyType;	// 敵の種類
+
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
+		float m_DamageAnimationTime;		// ダメージのアニメーション時間
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
+		float m_AttackAnimationTime;		// 攻撃のアニメーション時間
 
 private:
 	float	m_EnemyJumpDeltaTime;			// ジャンプしている時間
@@ -194,6 +206,8 @@ private:
 	bool	m_bDestroy;
 	bool	m_bStopping;
 	bool	m_bAttacking;
+	float	m_EnemyDamageAnimationCount;	// ダメージアニメーションカウント用
+	float	m_EnemyAttackAnimationCount;	// ダメージアニメーションカウント用
 
 private:
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス

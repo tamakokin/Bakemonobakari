@@ -77,22 +77,24 @@ void AEnemyActor::Tick(float DeltaTime)
 		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
 	// 死んでるのなら処理しない
-	if (!m_Alive)
+	if (m_EnemyState == ENEMY_STATE_DESTROY)
 	{
-		m_EnemyState = ENEMY_STATE_IDLE;
 		return;
 	}
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	if (!m_pCheckInScreen->Check(GetActorLocation())) 
 	{ 
+		UE_LOG(LogTemp, Warning, TEXT("AAAA"));
 		return; 
 	}
-	
 	// 移動関数
 	EnemyMove(DeltaTime);
 
 	// 攻撃処理
 	EnemyAttack(DeltaTime);
+
+	// ステータスの更新
+	EnemyStatusControl(DeltaTime);
 }
 
 // オーバーラップ関数
@@ -124,7 +126,41 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 // エネミーステータスコントロール
 void AEnemyActor::EnemyStatusControl(float _deltaTime)
 {
+	// 死亡時
+	if (m_EnemyState == ENEMY_STATE_DESTROY)
+	{
+		// 死亡アニメーション時間カウント
+	}
+	// 硬直状態の時
+	else if (m_EnemyState == ENEMY_STATE_STOP)
+	{
+		// 硬直アニメーション時間カウント
+	}
+	// ダメージ状態
+	else if (m_EnemyState == ENEMY_STATE_DAMAGE)
+	{
+		// ダメージアニメーションカウント
+		m_EnemyDamageAnimationCount += _deltaTime;
 
+		if (m_EnemyDamageAnimationCount > m_DamageAnimationTime)
+		{
+			m_EnemyState = ENEMY_STATE_IDLE;
+			m_EnemyDamageAnimationCount = 0.f;
+			ChangeAnim();
+		}
+	}
+	else if (m_EnemyState == ENEMY_STATE_ATTACK)
+	{
+		// 攻撃カウント
+		m_EnemyAttackAnimationCount += _deltaTime;
+
+		if (m_EnemyAttackAnimationCount > m_AttackAnimationTime)
+		{
+			m_EnemyState = ENEMY_STATE_IDLE;
+			m_EnemyAttackAnimationCount = 0.f;
+			ChangeAnim();
+		}
+	}
 }
 
 
@@ -227,6 +263,9 @@ void AEnemyActor::EnemyMove(float _deltaTime)
 			m_StraightVector = !m_StraightVector;
 		}
 
+		m_EnemyState = ENEMY_STATE_MOVE;
+		ChangeAnim();
+
 		//---------------------------------------------------------------
 		// 段差があったら乗り越えるみたいなプログラムがあってもいいかも
 		//---------------------------------------------------------------
@@ -257,6 +296,9 @@ void AEnemyActor::EnemyMove(float _deltaTime)
 
 		// 値の反映
 		SetActorLocation(tempEnemyPosition);
+
+		m_EnemyState = ENEMY_STATE_MOVE;
+		ChangeAnim();
 
 		break;
 
@@ -314,11 +356,16 @@ void AEnemyActor::EnemyMove(float _deltaTime)
 			// 初期位置の戻ったら時間の初期化
 			SetActorLocation(tempEnemyPosition);
 			m_EnemyJumpDeltaTime = 0.f;
+
+			m_EnemyState = ENEMY_STATE_MOVE;
+			ChangeAnim();
 			return;
 		}
 
 		// 値の反映
 		SetActorLocation(tempEnemyPosition);
+		m_EnemyState = ENEMY_STATE_MOVE;
+		ChangeAnim();
 
 		break;
 
@@ -414,6 +461,8 @@ void AEnemyActor::EnemyAttack(float _deltaTime)
 			actor = GetWorld()->SpawnActor<AActor>(subClass, location, rotation);
 
 			m_EnemyAttackingTime = 0.f;
+			m_EnemyState = ENEMY_STATE_ATTACK;
+			ChangeAnim();
 		}
 		break;
 
@@ -449,7 +498,7 @@ void AEnemyActor::EnemyStop()
 void AEnemyActor::EnemyDamage()
 {
 	// ダメージ状態だったら
-	if ((m_EnemyState == ENEMY_STATE_DAMAGE)|| (m_EnemyState == ENEMY_STATE_DAMAGE)) return;
+	if ((m_EnemyState == ENEMY_STATE_DAMAGE)||(m_EnemyState == ENEMY_STATE_DESTROY)) return;
 
 	m_EnemyState = ENEMY_STATE_DAMAGE;
 	EnemyDamageEvent();
@@ -461,6 +510,8 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 		--m_EnemyHP;
+		m_EnemyState = ENEMY_STATE_DAMAGE;
+		ChangeAnim();
 	}
 
 	if (m_EnemyHP <= 0)
@@ -468,14 +519,14 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		//死亡エフェクト生成が入る
 		//------------------------------------------------
+		m_EnemyState = ENEMY_STATE_DESTROY;
+		ChangeAnim();
 
 		// 攻撃音を出す
 		if (m_crashSound != NULL)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
-
-		m_Alive = false;
 		Des();
 	}
 }
@@ -489,8 +540,78 @@ void AEnemyActor::ReStartPosition()
 	m_EnemyAttackingTime = 0.0f;
 	m_StraightVector = false;
 	m_SwitchVector = false;
-	m_Alive = true;
+	m_EnemyState = ENEMY_STATE_IDLE;
 
 	SetActorLocation(m_initEnemyPosition);
 	SetActorRotation(m_StartRote);
+}
+
+// アニメーション切り替え
+void AEnemyActor::ChangeAnim()
+{
+	// 現在のアクターの状態を比較
+	switch (m_EnemyState)
+	{
+	case AEnemyActor::ENEMY_STATE_NONE:
+		break;
+
+	case AEnemyActor::ENEMY_STATE_MOVE:
+		m_bIdling = false;
+		m_bDamage = false;
+		m_bMoving = true;
+		m_bDestroy = false;
+		m_bStopping = false;
+		m_bAttacking = false;
+		break;
+
+	case AEnemyActor::ENEMY_STATE_IDLE:
+		m_bIdling = true;
+		m_bDamage = false;
+		m_bMoving = false;
+		m_bDestroy = false;
+		m_bStopping = false;
+		m_bAttacking = false;
+		break;
+
+	case AEnemyActor::ENEMY_STATE_DAMAGE:
+		m_bIdling = false;
+		m_bDamage = true;
+		m_bMoving = false;
+		m_bDestroy = false;
+		m_bStopping = false;
+		m_bAttacking = false;
+		break;
+
+	case AEnemyActor::ENEMY_STATE_DESTROY:
+		m_bIdling = false;
+		m_bDamage = false;
+		m_bMoving = false;
+		m_bDestroy = true;
+		m_bStopping = false;
+		m_bAttacking = false;
+		break;
+
+	case AEnemyActor::ENEMY_STATE_STOP:
+		m_bIdling = false;
+		m_bDamage = false;
+		m_bMoving = false;
+		m_bDestroy = false;
+		m_bStopping = true;
+		m_bAttacking = false;
+		break;
+
+	case AEnemyActor::ENEMY_STATE_ATTACK:
+		m_bIdling = false;
+		m_bDamage = false;
+		m_bMoving = false;
+		m_bDestroy = false;
+		m_bStopping = false;
+		m_bAttacking = true;
+		break;
+
+
+
+	default:
+		break;
+	}
 }
