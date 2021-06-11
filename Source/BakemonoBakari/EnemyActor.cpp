@@ -452,6 +452,7 @@ void AEnemyActor::EnemyDamage()
 	// ƒ_ƒ[ƒWó‘Ô‚¾‚Á‚½‚ç
 	if (m_EnemyState == ENEMY_STATE_DAMAGE) return;
 
+	m_EnemyState = ENEMY_STATE_DAMAGE;
 	EnemyDamageEvent();
 
 	if (m_EnemyHP > 0)
