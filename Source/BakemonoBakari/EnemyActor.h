@@ -8,7 +8,8 @@
 //			：2021/5/24 様々な敵形態を追加
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 //			：2021/6/ 9 アニメーションに必要な要素の追加
-
+//			：2021/6/7  リスタート時にエネミーを初期化する
+//			：			エネミーがやられた場合非表示にする
 
 #pragma once
 
@@ -49,7 +50,17 @@ protected:
 public:
 	// 毎フレームの処理
 	virtual void Tick(float DeltaTime) override;
+	// 死亡処理
+	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
+		void Des();
 
+	// 初期化処理
+	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
+		void ReStart();
+
+	// 初期座標に移動
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void ReStartPosition();
 private:
 	// オーバーラップ関数
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -72,7 +83,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Function")
 		// ダメージ処理
 		void EnemyDamage();
-
+	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
+		// ダメージ処理
+		void EnemyDamageEvent();
 
 // アニメーション管理用
 private:	
@@ -132,37 +145,36 @@ private:
 
 private:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_moveSpeedY;		// 進行方向のスピード
+		float m_moveSpeedY;					// 進行方向のスピード
 
 	UPROPERTY(EditAnywhere)
-		float m_moveRangeY;		// 進行方向の範囲
+		float m_moveRangeY;					// 進行方向の範囲
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 10.f))
-		float m_InitVelocityZ;	// 上方向の初速
+		float m_InitVelocityZ;				// 上方向の初速
 
 	UPROPERTY(EditAnywhere)
 		float m_ChangeVectorTolerance;		// プレイヤーに当たった際の方向転換の許容移動範囲
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 29.4f))
-		float m_JumpGravity;	// 重力加速度
+		float m_JumpGravity;				// 重力加速度
 
-	UPROPERTY(EditAnywhere)
-		float m_altitudeLimit;	// 最大高度
+	UPROPERTY(EditAnywhere)	
+		float m_altitudeLimit;				// 最大高度
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
-		int m_EnemyHP;		// 敵のＨＰ
+		int m_EnemyHPMax;		// 敵の最大ＨＰ
+
+	int m_EnemyHP;				// 敵の現在のHP
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_JumpWait;		// ジャンプするまでの待機時間
+		float m_JumpWait;					// ジャンプするまでの待機時間
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_AttackDelay;		// 攻撃までの待機時間
+		float m_AttackDelay;				// 攻撃までの待機時間
 
 	UPROPERTY(EditAnywhere)
-		ENEMY_TYPE m_EnemyType;	// 敵の種類
-
-
-
+		ENEMY_TYPE m_EnemyType;				// 敵の種類
 
 private:
 	float	m_EnemyJumpDeltaTime;			// ジャンプしている時間
@@ -170,9 +182,11 @@ private:
 	float	m_EnemyAttackingTime;			// 攻撃した後のディレイ
 	bool	m_StraightVector;				// 向いている方向
 	bool	m_SwitchVector;					// 右左のどちらを向いているかのフラグ
+	bool    m_Alive;						// 生きているかどうかのフラグ
 
 	FVector m_initEnemyPosition;			// 初期位置
 	FVector m_prevEnemyPosition;			// 1フレーム前の自身の位置
+	FRotator m_StartRote;					// エネミーの初期回転
 
 	// アニメーション切り替え用
 	bool	m_bIdling;

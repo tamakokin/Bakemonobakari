@@ -25,6 +25,8 @@ AEnemyActor::AEnemyActor()
 	, m_prevEnemyPosition(FVector::ZeroVector)
 	, m_StraightVector(false)
 	, m_SwitchVector(false)
+	, m_Alive(true)
+	, m_StartRote(FRotator::ZeroRotator)
 {
 	// 毎フレーム、このクラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -58,7 +60,11 @@ void AEnemyActor::BeginPlay()
 	// 初期位置の取得
 	m_initEnemyPosition = GetActorLocation();
 
-	
+	// 初期回転の取得
+	m_StartRote = GetActorRotation();
+
+	// HPの初期化
+	m_EnemyHP = m_EnemyHPMax;
 }
 
 // 毎フレームの処理
@@ -71,13 +77,18 @@ void AEnemyActor::Tick(float DeltaTime)
 	{
 		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
-
+	// 死んでるのなら処理しない
+	if (!m_Alive)
+	{
+		m_EnemyState = ENEMY_STATE_IDLE;
+		return;
+	}
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	if (!m_pCheckInScreen->Check(GetActorLocation())) 
 	{ 
-		UE_LOG(LogTemp, Warning, TEXT("AAAA"));
 		return; 
 	}
+	
 	// 移動関数
 	EnemyMove(DeltaTime);
 
@@ -441,6 +452,8 @@ void AEnemyActor::EnemyDamage()
 	// ダメージ状態だったら
 	if (m_EnemyState == ENEMY_STATE_DAMAGE) return;
 
+	EnemyDamageEvent();
+
 	if (m_EnemyHP > 0)
 	{
 		//------------------------------------------------
@@ -456,13 +469,28 @@ void AEnemyActor::EnemyDamage()
 		//死亡エフェクト生成が入る
 		//------------------------------------------------
 
-
 		// 攻撃音を出す
 		if (m_crashSound != NULL)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
 
-		Destroy();
+		m_Alive = false;
+		Des();
 	}
+}
+
+// 初期化
+void AEnemyActor::ReStartPosition()
+{
+	m_EnemyHP = m_EnemyHPMax;
+	m_EnemyJumpDeltaTime = 0.0f;
+	m_EnemyMovingDistance = 0.0f;
+	m_EnemyAttackingTime = 0.0f;
+	m_StraightVector = false;
+	m_SwitchVector = false;
+	m_Alive = true;
+
+	SetActorLocation(m_initEnemyPosition);
+	SetActorRotation(m_StartRote);
 }
