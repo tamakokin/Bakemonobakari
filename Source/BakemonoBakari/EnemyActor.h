@@ -7,8 +7,8 @@
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/24 様々な敵形態を追加
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
-//			：2021/6/7  リスタート時にエネミーを初期化する
-//			：			エネミーがやられた場合非表示にする
+//			：2021/6/ 9 アニメーションに必要な要素の追加
+
 
 #pragma once
 
@@ -50,23 +50,15 @@ public:
 	// 毎フレームの処理
 	virtual void Tick(float DeltaTime) override;
 
-	// 死亡処理
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		void Des();
-
-	// 初期化処理
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		void ReStart();
-
-	// 初期座標に移動
-	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
-	void ReStartPosition();
-
 private:
 	// オーバーラップ関数
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
+
+	// ステータスコントロール
+	void EnemyStatusControl(float _deltaTime);
+
 	// 移動処理
 	void EnemyMove(float _deltaTime);
 
@@ -81,9 +73,33 @@ public:
 		// ダメージ処理
 		void EnemyDamage();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		// ダメージ処理
-		void EnemyDamageEvent();
+
+// アニメーション管理用
+private:	
+	// アイドル状態か
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsIdling() const { return m_bIdling; }
+
+	// 動いているか
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsMoving() const { return m_bMoving; }
+
+	// ダメージを受けたか
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsDamage() const { return m_bDamage; }
+
+	// 硬直したか
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsStopping() const { return m_bStopping; }
+
+	// 死んだか
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsDestroy() const { return m_bDestroy; }
+
+	// 攻撃しているか
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+		bool IsAttacking() const { return m_bAttacking; }
+
 private:
 
 	// エネミーのステータス
@@ -93,6 +109,7 @@ private:
 		ENEMY_STATE_NONE = 0,
 		ENEMY_STATE_MOVE,
 		ENEMY_STATE_IDLE,
+		ENEMY_STATE_ATTACK,
 		ENEMY_STATE_DAMAGE,
 		ENEMY_STATE_STOP,
 	};
@@ -114,7 +131,6 @@ private:
 		FName m_tagName;				// タグ名
 
 private:
-
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_moveSpeedY;		// 進行方向のスピード
 
@@ -134,18 +150,19 @@ private:
 		float m_altitudeLimit;	// 最大高度
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
-		int m_EnemyHPMax;		// 敵の最大ＨＰ
-
-	int m_EnemyHP;				// 敵の現在のHP
+		int m_EnemyHP;		// 敵のＨＰ
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_JumpWait;		// ジャンプするまでの待機時間
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_AttackDelay;	// 攻撃までの待機時間
+		float m_AttackDelay;		// 攻撃までの待機時間
 
 	UPROPERTY(EditAnywhere)
 		ENEMY_TYPE m_EnemyType;	// 敵の種類
+
+
+
 
 private:
 	float	m_EnemyJumpDeltaTime;			// ジャンプしている時間
@@ -153,16 +170,21 @@ private:
 	float	m_EnemyAttackingTime;			// 攻撃した後のディレイ
 	bool	m_StraightVector;				// 向いている方向
 	bool	m_SwitchVector;					// 右左のどちらを向いているかのフラグ
-	bool    m_Alive;						// 生きているかどうかのフラグ
 
 	FVector m_initEnemyPosition;			// 初期位置
 	FVector m_prevEnemyPosition;			// 1フレーム前の自身の位置
 
-	FRotator m_StartRote;					// エネミーの初期回転
+	// アニメーション切り替え用
+	bool	m_bIdling;
+	bool	m_bMoving;
+	bool	m_bDamage;
+	bool	m_bDestroy;
+	bool	m_bStopping;
+	bool	m_bAttacking;
 
 private:
-	ENEMY_STATE m_EnemyState;				// エネミーのステータス
-	AActor* m_pOverlappedActor;				// オーバーラップしたアクター
+	ENEMY_STATE m_EnemyState;			// エネミーのステータス
+	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
 	AActor* m_pPlayerCharacter;
 
 	UCheckInScreen* m_pCheckInScreen;
