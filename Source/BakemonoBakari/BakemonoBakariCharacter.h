@@ -7,6 +7,8 @@
 //2021/05/19 更新者：陳　無敵時間フラグ
 //2021/05/26 更新者：陳　HPが0になった時の処理
 //2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
+// 2021/06/07 更新者：大金　プレイヤー死亡時のリスポーン処理の追加
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -61,6 +63,10 @@ protected:
 	//ダメージを受けたらノックバックする 5/17
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void KnockBack(float _enemylocation);
+
+	// 復帰処理
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void ReStart();
 
 	//攻撃しているかフラグ 4/23
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
@@ -139,4 +145,6 @@ public:
 
 private:
 	Player_Info m_info; //プレイヤー情報
+	FVector m_ReStartPos;	// プレイヤーのリスポーン座標
+
 };
