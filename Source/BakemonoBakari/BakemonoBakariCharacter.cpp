@@ -7,7 +7,7 @@
 // 2021/05/19 更新者：陳　無敵時間フラグ
 // 2021/05/26 更新者：陳　HPが0になった時の処理
 // 2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
-
+// 2021/06/07 更新者：大金　プレイヤー死亡時のリスポーン処理の追加
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -80,6 +80,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 void ABakemonoBakariCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	m_ReStartPos = GetActorLocation();
 
 }
 
@@ -243,6 +244,14 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 			IsOverlapping = true;
 			IsFallDead = true;
 		}
+		// 中間地点の場合
+		else if (OtherActor->ActorHasTag("ReStart"))
+		{
+			m_ReStartPos = GetActorLocation();
+
+			UE_LOG(LogTemp, Warning, TEXT("HIT"));
+		}
+
 		if (GEngine)
 		{
 			FString TheFloatStr = FString::SanitizeFloat(m_info.hp);
@@ -267,4 +276,19 @@ void ABakemonoBakariCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 		//IsDamage = false;
 		IsOverlapping = false;	//Overlapしていない
 	}
+}
+
+void ABakemonoBakariCharacter::ReStart()
+{
+	SetActorLocation(m_ReStartPos);
+	m_info.hp = 100.0;
+
+	IsDamage = false;			// ダメージ受けていない状態に
+	IsDead = false;			// 死亡時から復活
+	IsFallDead = false;
+	IsInvincible = false;		// 無敵時間の終了
+	IsOverlapping = false;
+
+	GetCharacterMovement()->GravityScale = 4.0f;
+	GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
 }
