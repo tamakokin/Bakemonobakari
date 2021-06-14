@@ -75,12 +75,6 @@ private:
 	// ステータスコントロール
 	void EnemyStatusControl(float _deltaTime);
 
-	// 移動処理
-	void EnemyMove(float _deltaTime);
-
-	// 攻撃処理
-	void EnemyAttack(float _deltaTime);
-
 	// アニメーション変更処理
 	void ChangeAnim();
 
