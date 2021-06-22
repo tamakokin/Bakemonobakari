@@ -89,21 +89,21 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	Hang();
 
+	//転落死亡の処理 5/28
+	if (IsFallDead == true)
+	{
+	TakeDamage(100.0);			//ダメージ計算
+	//IsDamage = true;			//ダメージ受けている
+	GetCharacterMovement()->GravityScale = 0.0f;
+	GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
+	}
 	//Overlapしている時ダメージを受ける処理 5/20
-	if (IsOverlapping == true && IsInvincible == false && IsDead == false)
+	else if (IsOverlapping == true && IsInvincible == false && IsDead == false)
 	{
 		TakeDamage(10.0);			//ダメージ計算
 		IsDamage = true;			//ダメージ受けている
 		IsInvincible = true;		//無敵時間に入る
 		KnockBack(EnemyLocation);	//プレイヤーがノックバックされる
-	}
-	//転落死亡の処理 5/28
-	else if (IsFallDead == true)
-	{
-		TakeDamage(100.0);			//ダメージ計算
-		IsDamage = true;			//ダメージ受けている
-		GetCharacterMovement()->GravityScale = 0.0f;
-		GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
 	}
 }
 
