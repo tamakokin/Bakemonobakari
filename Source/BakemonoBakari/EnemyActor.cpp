@@ -6,7 +6,7 @@
 //			：2021/5/17 ジャンプする敵の行動プログラムを追加
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
-
+//           
 #include "Kismet/GameplayStatics.h"
 #include "EnemyActor.h"
 #include "CheckInScreen.h"
@@ -26,18 +26,18 @@ AEnemyActor::AEnemyActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// ベースに関連つけ
-	m_pBase = CreateDefaultSubobject<USceneComponent>(TEXT("m_pBase"));
+	//m_pBase = CreateDefaultSubobject<USceneComponent>(TEXT("m_pBase"));
 	// beseをrootに設定
-	RootComponent = m_pBase;
+	//RootComponent = m_pBase;
+
+	//	コリジョン判定用カプセルコンポーネント生成
+	m_pCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionComp"));
+	m_pCapsuleComp->SetupAttachment(RootComponent);
 
 	// メッシュを探す
 	m_pEnemyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("m_pEnemyMesh"));
 	// メッシュをつける
 	m_pEnemyMesh->SetupAttachment(RootComponent);
-
-	//	コリジョン判定用カプセルコンポーネント生成
-	m_pCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionComp"));
-	m_pCapsuleComp->SetupAttachment(RootComponent);
 
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	// 画面何にいるかを判別するコンポーネントの生成
@@ -71,9 +71,11 @@ void AEnemyActor::Tick(float DeltaTime)
 	{
 		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
+
 	// 死んでるのなら処理しない
 	if (m_EnemyState == ENEMY_STATE_DESTROY)
 	{
+		Des();
 		return;
 	}
 
@@ -113,6 +115,12 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 		{
 			//// 動きを止める
 			//EnemyStop();
+		}
+		// 穴に落ちると死亡
+		else if (m_pOverlappedActor->ActorHasTag("Hole"))
+		{
+			m_EnemyState = ENEMY_STATE_DESTROY;
+			Des();
 		}
 	}
 	m_pOverlappedActor = NULL;
