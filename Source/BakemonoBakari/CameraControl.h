@@ -41,6 +41,12 @@ private:
 	// プレイヤーの追従を行うかどうか
 	bool m_Player;
 
+	// カメラ移動のモードの切替
+	float m_ChangeDistance;
+
+	// プレイヤーアクタ
+	AActor* m_pPlayerActor;
+
 	// カメラを移動させるかどうか
 	bool m_MoveHight;
 	bool m_MoveWidth;
@@ -135,7 +141,7 @@ private:
 	void CheckInPos();
 
 	// プレイヤーの向きによって中心座標を変更(プレイヤーが右向きなら、右画面を広くとる)
-	void NoticePlayer();
+	FVector NoticePlayer();
 
 	// カメラをプレイヤーに追従させる
 	void MovePlayerCamera();
