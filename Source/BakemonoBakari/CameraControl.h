@@ -38,6 +38,8 @@ private:
 	// 前回の目標座標
 	FVector m_OldPos;
 
+	// プレイヤーの前方にカメラを移動させる
+	FVector m_FrontPos;
 	// プレイヤーの追従を行うかどうか
 	bool m_Player;
 
@@ -139,9 +141,6 @@ private:
 
 	// カメラが範囲外にいる場合範囲に戻す
 	void CheckInPos();
-
-	// プレイヤーの向きによって中心座標を変更(プレイヤーが右向きなら、右画面を広くとる)
-	FVector NoticePlayer();
 
 	// カメラをプレイヤーに追従させる
 	void MovePlayerCamera();

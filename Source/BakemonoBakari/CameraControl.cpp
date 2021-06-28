@@ -88,7 +88,7 @@ void ACameraControl::SearchPlayer()
 			m_pSpline.Add(Cast<ACameraSpline>(actors[i]));
 		}
 
-		else if (actors[i]->ActorHasTag("PlayerCharacter")) 
+		else if (actors[i]->ActorHasTag("PlayerCharacter"))
 		{
 			m_pPlayerActor = actors[i];
 		}
@@ -147,13 +147,13 @@ void ACameraControl::MovePlayerCamera()
 	{
 		for (int i = tempPoses.Num() - 1; i > n; --i)
 		{
-			if (tempLengthes[i] < tempLengthes[i - 1]) 
+			if (tempLengthes[i] < tempLengthes[i - 1])
 			{
 				float temp = tempLengthes[i];
 				FVector tempPos = tempPoses[i];
 
 				tempLengthes[i] = tempLengthes[i - 1];
-				tempPoses[i] = tempPoses[i -  1];
+				tempPoses[i] = tempPoses[i - 1];
 
 				tempLengthes[i - 1] = temp;
 				tempPoses[i - 1] = tempPos;
@@ -162,37 +162,23 @@ void ACameraControl::MovePlayerCamera()
 	}
 	m_TargetPos = tempPoses[0];
 
+	// カメラとプレイヤーの相対距離
+	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
-	if (m_MoveWidth)
+	// カメラの移動を行うか判定する
+	if (FMath::Abs(relativeDistance) > m_LenghWidth)
 	{
-		if (m_ChangeDistance > 0) 
-		{
-			if (m_TargetPos.Y - GetActorLocation().Y - NoticePlayer().Y *0.5f < -m_ChangeDistance)
-			{
-				m_MoveWidth = false;
-			}
-		}
-		else
-		{
-			if (m_TargetPos.Y - GetActorLocation().Y - NoticePlayer().Y * 0.5f > -m_ChangeDistance)
-			{
-				m_MoveWidth = false;
-			}
-		}
-	}
-	else
-	{
-		// カメラの移動を行うか判定する
-		if (FMath::Abs(m_TargetPos.Y - GetActorLocation().Y) > m_LenghWidth)
-		{
-			m_MoveWidth = true;
-			m_ChangeDistance = m_TargetPos.Y - GetActorLocation().Y;
-		}
-	}
+		UE_LOG(LogTemp, Warning, TEXT("%f"), m_pPlayerActor->GetActorRotation().Yaw);
 
-	if (FMath::Abs(m_TargetPos.Z - GetActorLocation().Z) > m_LenghHight)
-	{
-		m_MoveHight = true;
+		if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
+		{
+			m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+		}
+		else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
+		{
+			m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+		}
+		m_MoveWidth = true;
 	}
 
 	// 移動後の目標座標を設定
@@ -202,9 +188,10 @@ void ACameraControl::MovePlayerCamera()
 	// 横移動分を加算
 	if (m_MoveWidth)
 	{
-		targetPos += NoticePlayer();
+		targetPos += m_FrontPos;
 		move += FVector(0.0f, (targetPos.Y - GetActorLocation().Y) / m_NowSpeed, 0.0f);
 	}
+
 	// 縦移動分を加算
 	move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
 
@@ -226,24 +213,6 @@ void ACameraControl::MoveCamera()
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-// プレイヤーの向いている方向に合わせてカメラの中心座標を変更//-----------------------------------------------------------------------------------------------------------------------------------------------
-FVector ACameraControl::NoticePlayer()
-{
-	if (m_pPlayerActor)
-	{
-		// プレイヤー右を向いている場合はプレイヤーより+Xの座標を注目座標に
-		if (m_pPlayerActor->GetActorRotation().Yaw >= 0)
-		{
-			return  FVector(0.0f,m_AdjustmentPos.Y,m_AdjustmentPos.Z);
-		}
-		else
-		{
-			return  FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
-		}
-	}
-	return FVector::ZeroVector;
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 // カメラを揺らす-----------------------------------------------------------------------------------------------------------------------------------------------
 
 void ACameraControl::Shock()
