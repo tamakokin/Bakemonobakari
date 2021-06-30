@@ -35,9 +35,7 @@ AEnemyActor::AEnemyActor()
 	m_pCapsuleComp->SetupAttachment(RootComponent);
 
 	// メッシュを探す
-	m_pEnemyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("m_pEnemyMesh"));
-	// メッシュをつける
-	m_pEnemyMesh->SetupAttachment(RootComponent);
+	m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	// 画面何にいるかを判別するコンポーネントの生成
@@ -67,9 +65,14 @@ void AEnemyActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//	オーバーラップ接触し始めた時に呼ばれるイベント関数を記録
-	if (m_pCapsuleComp != NULL)
+	if (m_pEnemyMesh)
 	{
-		m_pCapsuleComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
+		m_pEnemyMesh->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
+	}
+	else 
+	{
+		// メッシュを探す
+		m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 	}
 
 	// 死んでるのなら処理しない
@@ -82,11 +85,13 @@ void AEnemyActor::Tick(float DeltaTime)
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	if (!m_pCheckInScreen->Check(GetActorLocation()))
 	{
+		m_IsInScreen = false;
 		Des();
 		return;
 	}
 	else if (m_EnemyState != ENEMY_STATE_DESTROY)
 	{
+		m_IsInScreen = true;
 		Indication();
 	}
 
@@ -196,7 +201,7 @@ void AEnemyActor::EnemyDamage()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
-		Des();
+		//Des();
 	}
 }
 

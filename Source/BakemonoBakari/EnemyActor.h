@@ -154,7 +154,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		FName m_tagName;				// タグ名
 
-private:
+public:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
 		int m_EnemyHPMax;		// 敵の最大ＨＰ
 
@@ -165,6 +165,8 @@ private:
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_AttackAnimationTime;		// 攻撃のアニメーション時間
+
+		bool m_IsInScreen;					// 画面内いるかどうか
 
 private:
 

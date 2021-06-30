@@ -168,8 +168,6 @@ void ACameraControl::MovePlayerCamera()
 	// ƒJƒƒ‰‚ÌˆÚ“®‚ðs‚¤‚©”»’è‚·‚é
 	if (FMath::Abs(relativeDistance) > m_LenghWidth)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%f"), m_pPlayerActor->GetActorRotation().Yaw);
-
 		if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
 		{
 			m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
