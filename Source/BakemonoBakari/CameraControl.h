@@ -139,6 +139,9 @@ private:
 	// プレイヤーを検索する
 	void SearchPlayer();
 
+	// スプラインを探索
+	void SearchSpline();
+
 	// カメラが範囲外にいる場合範囲に戻す
 	void CheckInPos();
 
