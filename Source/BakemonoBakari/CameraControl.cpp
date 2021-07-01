@@ -64,8 +64,8 @@ void ACameraControl::BeginPlay()
 	}
 
 	// カメラの初期位置を初期化
-	FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
-	//SetActorLocation(m_pSpline->GetPlayerPos());
+	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_NowDistance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
+	UE_LOG(LogTemp, Warning, TEXT("2%s"), *GetActorLocation().ToString());
 
 	//NoticePlayer();
 }
@@ -95,32 +95,8 @@ void ACameraControl::SearchPlayer()
 	}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
-// 更新処理//-----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (m_Player)
-	{
-		MovePlayerCamera();
-	}
-	else
-	{
-		MoveCamera();
-	}
-	// 揺れを行う
-	if (m_shockStart)
-	{
-		Shock();
-	}
-
-	// カメラが範囲を超えないようにする
-	//CheckInPos();
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-
-// カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::MovePlayerCamera()
+// スプラインを検索する-----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::SearchSpline()
 {
 	if (m_pSpline.Num() == 0)return;
 
@@ -161,6 +137,40 @@ void ACameraControl::MovePlayerCamera()
 		}
 	}
 	m_TargetPos = tempPoses[0];
+
+	UE_LOG(LogTemp, Warning, TEXT("1%s"), *m_TargetPos.ToString());
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+// 更新処理//-----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (m_Player)
+	{
+		MovePlayerCamera();
+	}
+	else
+	{
+		MoveCamera();
+	}
+	// 揺れを行う
+	if (m_shockStart)
+	{
+		Shock();
+	}
+
+	// カメラが範囲を超えないようにする
+	//CheckInPos();
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+// カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::MovePlayerCamera()
+{
+	if (m_pSpline.Num() == 0)return;
+
+	SearchSpline();
 
 	// カメラとプレイヤーの相対距離
 	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
