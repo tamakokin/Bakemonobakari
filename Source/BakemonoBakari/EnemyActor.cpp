@@ -169,6 +169,8 @@ void AEnemyActor::EnemyStatusControl(float _deltaTime)
 			ChangeAnim();
 		}
 	}
+
+	ChangeAnim();
 }
 
 // ƒ_ƒ[ƒWŠÖ”
