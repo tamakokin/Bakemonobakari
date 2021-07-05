@@ -7,8 +7,8 @@
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 //           
-#include "Kismet/GameplayStatics.h"
 #include "EnemyActor.h"
+#include "Kismet/GameplayStatics.h"
 #include "CheckInScreen.h"
 
 // Sets default values
