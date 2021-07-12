@@ -136,41 +136,41 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 // エネミーステータスコントロール
 void AEnemyActor::EnemyStatusControl(float _deltaTime)
 {
-	// 死亡時
-	if (m_EnemyState == ENEMY_STATE_DESTROY)
-	{
-		// 死亡アニメーション時間カウント
-	}
-	// 硬直状態の時
-	else if (m_EnemyState == ENEMY_STATE_STOP)
-	{
-		// 硬直アニメーション時間カウント
-	}
-	// ダメージ状態
-	else if (m_EnemyState == ENEMY_STATE_DAMAGE)
-	{
-		// ダメージアニメーションカウント
-		m_EnemyDamageAnimationCount += _deltaTime;
+	//// 死亡時
+	//if (m_EnemyState == ENEMY_STATE_DESTROY)
+	//{
+	//	// 死亡アニメーション時間カウント
+	//}
+	//// 硬直状態の時
+	//else if (m_EnemyState == ENEMY_STATE_STOP)
+	//{
+	//	// 硬直アニメーション時間カウント
+	//}
+	//// ダメージ状態
+	//else if (m_EnemyState == ENEMY_STATE_DAMAGE)
+	//{
+	//	// ダメージアニメーションカウント
+	//	m_EnemyDamageAnimationCount += _deltaTime;
 
-		if (m_EnemyDamageAnimationCount > m_DamageAnimationTime)
-		{
-			m_EnemyState = ENEMY_STATE_IDLE;
-			m_EnemyDamageAnimationCount = 0.f;
-			ChangeAnim();
-		}
-	}
-	else if (m_EnemyState == ENEMY_STATE_ATTACK)
-	{
-		// 攻撃カウント
-		m_EnemyAttackAnimationCount += _deltaTime;
+	//	if (m_EnemyDamageAnimationCount > m_DamageAnimationTime)
+	//	{
+	//		m_EnemyState = ENEMY_STATE_IDLE;
+	//		m_EnemyDamageAnimationCount = 0.f;
+	//		ChangeAnim();
+	//	}
+	//}
+	//else if (m_EnemyState == ENEMY_STATE_ATTACK)
+	//{
+	//	// 攻撃カウント
+	//	m_EnemyAttackAnimationCount += _deltaTime;
 
-		if (m_EnemyAttackAnimationCount > m_AttackAnimationTime)
-		{
-			m_EnemyState = ENEMY_STATE_IDLE;
-			m_EnemyAttackAnimationCount = 0.f;
-			ChangeAnim();
-		}
-	}
+	//	if (m_EnemyAttackAnimationCount > m_AttackAnimationTime)
+	//	{
+	//		m_EnemyState = ENEMY_STATE_IDLE;
+	//		m_EnemyAttackAnimationCount = 0.f;
+	//		ChangeAnim();
+	//	}
+	//}
 
 	ChangeAnim();
 }
