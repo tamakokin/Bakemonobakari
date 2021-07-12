@@ -1,13 +1,16 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 //更新履歴
-//2021/04/23 更新者：陳　攻撃、しゃがみについて処理
-//2021/05/07 更新者：陳　プレイヤーの基本情報（HPなど）
-//2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
-//2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
-//2021/05/19 更新者：陳　無敵時間フラグ
-//2021/05/26 更新者：陳　HPが0になった時の処理
-//2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
+// 2021/04/23 更新者：陳　攻撃、しゃがみについて処理
+// 2021/05/07 更新者：陳　プレイヤーの基本情報（HPなど）
+// 2021/05/14 更新者：陳　飛翔距離が伸びる（ジャンプ）
+// 2021/05/17 更新者：陳　ダメージを受けたらノックバックする処理
+// 2021/05/19 更新者：陳　無敵時間フラグ
+// 2021/05/26 更新者：陳　HPが0になった時の処理
+// 2021/06/07 更新者：伴野　シーン開始時のフェードインの最中は入力を受け付けない
 // 2021/06/07 更新者：大金　プレイヤー死亡時のリスポーン処理の追加
+// 2021/07/05 更新者：伴野　梯子の上り下り機能の追加
+// 2021/07/05 更新者：伴野　左右入力を受け取った際、一度変数に保存するよう変更
+// 2021/07/08 更新者：伴野　梯子を登り切った際の処理を追加
 
 #pragma once
 
@@ -15,6 +18,15 @@
 #include "Engine.h"
 #include "GameFramework/Character.h"
 #include "BakemonoBakariCharacter.generated.h"
+
+//近くにある梯子の向き 7/5伴野
+UENUM(BlueprintType)
+enum class ELadderDirection : uint8
+{
+	LD_None,
+	LD_Right,
+	LD_Left
+};
 
 UCLASS(config=Game)
 class ABakemonoBakariCharacter : public ACharacter
@@ -46,6 +58,11 @@ protected:
 
 	/** Called for side to side input */
 	void MoveRight(float Val);
+	void MoveUp(float Val);
+
+	// 左右上下入力の値を受け取って変数に保存する関数 7/5伴野
+	void InputRight(float Val);
+	void InputUp(float Val);
 
 	///** Handle touch inputs. */
 	//void TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location);
@@ -83,6 +100,15 @@ protected:
 	//右方向に向いているかフラグ 5/10
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Direction")
 		bool IsFaceRight;
+	//梯子を掴んでいるかフラグ 7/5伴野
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
+		bool IsLadder;
+	//梯子を登り切ったフラグ 7/8伴野
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
+		bool IsLadderClimb;
+	//近くにある梯子の向き 7/5伴野
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
+		ELadderDirection LadderDir;
 	//飛翔距離伸びフラグ 5/14
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 		bool IsHanging;
@@ -95,12 +121,16 @@ protected:
 	//転落死亡フラグ 5/28
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		bool IsFallDead;
-	//オブジェクトと接触しているフラグ 5/19
+	//敵と接触しているフラグ 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
-		bool IsOverlapping;
+		bool IsEnemyContack;
 	//敵の水平位置 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		float EnemyLocation;
+
+	// 左右上下入力の値を保存する変数 7/5伴野
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		FVector2D InputValue;
 	
 	//フェードイン時の入力不可フラグ 6/7伴野
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -126,6 +156,16 @@ public:
 	//飛翔距離が伸びる関数 5/14
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void Hang();
+
+	// 梯子を掴むときの処理 7/5伴野
+	void GraspLadder();
+
+	// 梯子から手を放すときの処理 7/5伴野
+	UFUNCTION(BlueprintCallable, Category = "Ladder")
+		void LeaveLadder();
+
+	// 梯子を上り切ったときの処理 7/5伴野
+	void ClimbLadder(float DeltaTime);
 
 	//フェードイン時の入力不可フラグを設定 6/7伴野
 	UFUNCTION(BlueprintCallable, Category = "Input")
