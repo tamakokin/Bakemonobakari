@@ -8,6 +8,7 @@
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 //           
 #include "EnemyActor.h"
+#include "MyGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "CheckInScreen.h"
 
@@ -19,6 +20,7 @@ AEnemyActor::AEnemyActor()
 	, m_pBase(NULL)
 	, m_EnemyState(ENEMY_STATE_IDLE)
 	, m_pOverlappedActor(NULL)
+	, m_score(500.f)
 	, m_initEnemyPosition(FVector::ZeroVector)
 	, m_StartRote(FRotator::ZeroRotator)
 {
@@ -197,6 +199,9 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		m_EnemyState = ENEMY_STATE_DESTROY;
 		ChangeAnim();
+
+		// スコアを加算する
+		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
 
 		// 攻撃音を出す
 		if (m_crashSound != NULL)

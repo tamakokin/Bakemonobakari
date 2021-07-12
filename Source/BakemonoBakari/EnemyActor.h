@@ -160,6 +160,9 @@ public:
 
 	int m_EnemyHP;				// 敵の現在のHP
 
+	UPROPERTY(EditAnywhere)
+		int m_score;			// 敵を倒した場合に獲得できるスコア
+
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_DamageAnimationTime;		// ダメージのアニメーション時間
 
