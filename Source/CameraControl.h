@@ -38,8 +38,16 @@ private:
 	// 前回の目標座標
 	FVector m_OldPos;
 
+	// プレイヤーの前方にカメラを移動させる
+	FVector m_FrontPos;
 	// プレイヤーの追従を行うかどうか
 	bool m_Player;
+
+	// カメラ移動のモードの切替
+	float m_ChangeDistance;
+
+	// プレイヤーアクタ
+	AActor* m_pPlayerActor;
 
 	// カメラを移動させるかどうか
 	bool m_MoveHight;
@@ -76,9 +84,7 @@ public:
 		float m_LenghHight;				// 現在の座標とプレイヤーとの距離が長いなら移動させる
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		FVector m_MaxPos;				// カメラが移動できる範囲の最大値
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		FVector m_MinPos;				// カメラが移動できる範囲の最小値
+		float m_MaxSpeed;				// カメラが移動できる速度の最大値
 
 public:
 	// パラメータを外部より調整（カメラのスクロールを止めたいときはカメラ停止位置のアクターを引数に入れてこれを呼ぶ）
@@ -111,14 +117,6 @@ public:
 		m_shockStart = true;
 	}
 
-	// カメラの移動する範囲を設定する
-	UFUNCTION(BlueprintCallable, Category = "Camera Function")
-		void SetScope(FVector _max = FVector(2170.0f, 13480.0f, 550.0f),FVector _min = FVector(2170.0f, -13480.0f, -550.0f))
-	{
-		m_MaxPos = _max;
-		m_MinPos = _min;
-	}
-
 	// カメラの距離を設定する
 	UFUNCTION(BlueprintCallable, Category = "Camera Function")
 		void SetDistance(float _distance = 800.0f) { m_Distance = _distance; }
@@ -131,11 +129,11 @@ private:
 	// プレイヤーを検索する
 	void SearchPlayer();
 
-	// カメラが範囲外にいる場合範囲に戻す
-	void CheckInPos();
+	// スプラインを探索
+	void SearchSpline();
 
-	// プレイヤーの向きによって中心座標を変更(プレイヤーが右向きなら、右画面を広くとる)
-	void NoticePlayer();
+	// カメラが範囲外にいる場合範囲に戻す
+	//void CheckInPos();
 
 	// カメラをプレイヤーに追従させる
 	void MovePlayerCamera();

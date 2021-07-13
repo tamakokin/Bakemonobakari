@@ -20,7 +20,9 @@ ACameraControl::ACameraControl() :
 	m_NowDistance(800.0f),
 	m_NowSpeed(0.0f),
 	m_OldPos(FVector::ZeroVector),
+	m_FrontPos(FVector(0.0f, -150.0f, 0.0f)),
 	m_Player(true),
+	m_pPlayerActor(NULL),
 	m_MoveHight(true),
 	m_MoveWidth(true),
 	m_shockCount(0),
@@ -28,15 +30,14 @@ ACameraControl::ACameraControl() :
 	m_shockMaxWidth(0.0f),
 	m_shockMaxHeight(0.0f),
 	m_shockStart(false),
-	m_AdjustmentPos(FVector(0.0f, 150.0f, 100.0f)),
+	m_AdjustmentPos(FVector(0.0f, 150.0f, 0.0f)),
 	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(70.0f),
 	m_Distance(800.0f),
 	m_LenghWidth(400.0f),
 	m_LenghHight(100.0f),
-	m_MaxPos(FVector(2170.0f, 13480.0f, 550.0f)),
-	m_MinPos(FVector(2170.0f, -13480.0f, -550.0f))
+	m_MaxSpeed(10.0f)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -63,10 +64,7 @@ void ACameraControl::BeginPlay()
 	}
 
 	// カメラの初期位置を初期化
-	FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
-	//SetActorLocation(m_pSpline->GetPlayerPos());
-
-	//NoticePlayer();
+	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_NowDistance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -86,39 +84,18 @@ void ACameraControl::SearchPlayer()
 		{
 			m_pSpline.Add(Cast<ACameraSpline>(actors[i]));
 		}
+
+		else if (actors[i]->ActorHasTag("PlayerCharacter"))
+		{
+			m_pPlayerActor = actors[i];
+		}
 	}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
-// 更新処理//-----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (m_Player)
-	{
-		MovePlayerCamera();
-	}
-	else
-	{
-		MoveCamera();
-	}
-	// 揺れを行う
-	if (m_shockStart)
-	{
-		Shock();
-	}
-
-	// カメラが範囲を超えないようにする
-	//CheckInPos();
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-
-// カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::MovePlayerCamera()
+// スプラインを検索する-----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::SearchSpline()
 {
 	if (m_pSpline.Num() == 0)return;
-
-	NoticePlayer();
 
 	// マップ内のスプラインを取得
 	TArray<FVector> tempPoses;
@@ -143,13 +120,13 @@ void ACameraControl::MovePlayerCamera()
 	{
 		for (int i = tempPoses.Num() - 1; i > n; --i)
 		{
-			if (tempLengthes[i] < tempLengthes[i - 1]) 
+			if (tempLengthes[i] < tempLengthes[i - 1])
 			{
 				float temp = tempLengthes[i];
 				FVector tempPos = tempPoses[i];
 
 				tempLengthes[i] = tempLengthes[i - 1];
-				tempPoses[i] = tempPoses[i -  1];
+				tempPoses[i] = tempPoses[i - 1];
 
 				tempLengthes[i - 1] = temp;
 				tempPoses[i - 1] = tempPos;
@@ -157,23 +134,50 @@ void ACameraControl::MovePlayerCamera()
 		}
 	}
 	m_TargetPos = tempPoses[0];
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+// 更新処理//-----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (m_Player)
+	{
+		MovePlayerCamera();
+	}
+	else
+	{
+		MoveCamera();
+	}
+	// 揺れを行う
+	if (m_shockStart)
+	{
+		Shock();
+	}
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+// カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::MovePlayerCamera()
+{
+	if (m_pSpline.Num() == 0)return;
+
+	SearchSpline();
+
+	// カメラとプレイヤーの相対距離
+	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
 	// カメラの移動を行うか判定する
-	if (FMath::Abs(m_TargetPos.Y - GetActorLocation().Y) > m_LenghWidth)
+	if (FMath::Abs(relativeDistance) > m_LenghWidth)
 	{
-		m_MoveWidth = true;
-	}
-	else
-	{
-		m_MoveWidth = false;
-	}
-	if (FMath::Abs(m_TargetPos.Z - GetActorLocation().Z) > m_LenghHight)
-	{
-		m_MoveHight = true;
-	}
-	else
-	{
-		m_MoveHight = false;
+		if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
+		{
+			m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+		}
+		else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
+		{
+			m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+		}
 	}
 
 	// 移動後の目標座標を設定
@@ -181,25 +185,23 @@ void ACameraControl::MovePlayerCamera()
 	FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f, 0.0f);
 
 	// 横移動分を加算
-	if (m_MoveWidth)
-	{
-		move += FVector(0.0f, (targetPos.Y - GetActorLocation().Y) / 2.0f, 0.0f);
-	}
-	else 
-	{
-		move += FVector(0.0f, (targetPos.Y - GetActorLocation().Y) / m_NowSpeed, 0.0f);
+	targetPos += m_FrontPos;
+	float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
 
-	}
-	if (m_MoveHight) 
+	// 移動速度を制限する
+	if ((speed > 0) && (speed > m_MaxSpeed))
 	{
-		// 縦移動分を加算
-		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / 2.0f);
+		speed = m_MaxSpeed;
 	}
-	else 
+	else if ((speed < 0) && (speed < -m_MaxSpeed))
 	{
-		// 縦移動分を加算
-		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
+		speed = -m_MaxSpeed;
 	}
+
+	move += FVector(0.0f, speed, 0.0f);
+
+	// 縦移動分を加算
+	move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
 
 	// 移動
 	SetActorLocation(GetActorLocation() + move);
@@ -219,23 +221,6 @@ void ACameraControl::MoveCamera()
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-// プレイヤーの向いている方向に合わせてカメラの中心座標を変更//-----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::NoticePlayer()
-{
-	//if (m_pPlayerActor)
-	//{
-	//	// プレイヤー右を向いている場合はプレイヤーより+Xの座標を注目座標に
-	//	if (m_pPlayerActor->GetActorRotation().Yaw >= 0)
-	//	{
-	//		m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f,m_AdjustmentPos.Y,m_AdjustmentPos.Z);
-	//	}
-	//	else
-	//	{
-	//		m_TargetPos = m_pPlayerActor->GetActorLocation() + FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
-	//	}
-	//}
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 // カメラを揺らす-----------------------------------------------------------------------------------------------------------------------------------------------
 
 void ACameraControl::Shock()
@@ -291,31 +276,31 @@ bool ACameraControl::CheckInCamera(FVector _pos, FVector _size)
 	return true;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
-// カメラが範囲外にいる場合範囲に戻す-----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::CheckInPos()
-{
-	float width = GetActorLocation().Y;
-	float hight = GetActorLocation().Z;
-
-	auto max = [](float& _pos, float _value)
-	{
-		if (_pos > _value)
-		{
-			_pos = _value;
-		}
-	};
-	auto min = [](float& _pos, float _value)
-	{
-		if (_pos < _value)
-		{
-			_pos = _value;
-		}
-	};
-	max(width, m_MaxPos.Y);
-	max(hight, m_MaxPos.Z);
-	min(width, m_MinPos.Y);
-	min(hight, m_MinPos.Z);
-
-	SetActorLocation(FVector(GetActorLocation().X, width, hight));
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
+//// カメラが範囲外にいる場合範囲に戻す-----------------------------------------------------------------------------------------------------------------------------------------------
+//void ACameraControl::CheckInPos()
+//{
+//	float width = GetActorLocation().Y;
+//	float hight = GetActorLocation().Z;
+//
+//	auto max = [](float& _pos, float _value)
+//	{
+//		if (_pos > _value)
+//		{
+//			_pos = _value;
+//		}
+//	};
+//	auto min = [](float& _pos, float _value)
+//	{
+//		if (_pos < _value)
+//		{
+//			_pos = _value;
+//		}
+//	};
+//	max(width, m_MaxPos.Y);
+//	max(hight, m_MaxPos.Z);
+//	min(width, m_MinPos.Y);
+//	min(hight, m_MinPos.Z);
+//
+//	SetActorLocation(FVector(GetActorLocation().X, width, hight));
+//}
+////-----------------------------------------------------------------------------------------------------------------------------------------------
