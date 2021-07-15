@@ -66,6 +66,10 @@ public:
 	// 初期座標に移動
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void ReStartPosition();
+
+	// 状態の初期化
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void ReSetState();
 private:
 	// オーバーラップ関数
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

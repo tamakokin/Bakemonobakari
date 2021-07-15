@@ -27,11 +27,6 @@ AEnemyActor::AEnemyActor()
 	// 毎フレーム、このクラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
 
-	// ベースに関連つけ
-	//m_pBase = CreateDefaultSubobject<USceneComponent>(TEXT("m_pBase"));
-	// beseをrootに設定
-	//RootComponent = m_pBase;
-
 	//	コリジョン判定用カプセルコンポーネント生成
 	m_pCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionComp"));
 	m_pCapsuleComp->SetupAttachment(RootComponent);
@@ -43,7 +38,6 @@ AEnemyActor::AEnemyActor()
 	// 画面何にいるかを判別するコンポーネントの生成
 	m_pCheckInScreen = CreateDefaultSubobject<UCheckInScreen>(TEXT("CheckInScreen"));
 
-	//m_pCheckInScreen = Cast<UCheckInScreen>(this);
 }
 
 // ゲームスタート時、または生成時に呼ばれる処理
@@ -222,6 +216,13 @@ void AEnemyActor::ReStartPosition()
 	SetActorRotation(m_StartRote);
 }
 
+// 状態の初期化
+// アニメーション切り替え
+void AEnemyActor::ReSetState() 
+{
+	m_EnemyState = ENEMY_STATE_IDLE;
+}
+
 // アニメーション切り替え
 void AEnemyActor::ChangeAnim()
 {
@@ -284,9 +285,6 @@ void AEnemyActor::ChangeAnim()
 		m_bStopping = false;
 		m_bAttacking = true;
 		break;
-
-
-
 	default:
 		break;
 	}
