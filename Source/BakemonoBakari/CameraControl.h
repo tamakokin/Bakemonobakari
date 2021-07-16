@@ -35,9 +35,6 @@ private:
 	float m_NowDistance;				// 現在カメラを配置する注目アクターからの奥行の距離
 	float m_NowSpeed;					// カメラの現在の移動速度
 
-	// 前回の目標座標
-	FVector m_OldPos;
-
 	// プレイヤーの前方にカメラを移動させる
 	FVector m_FrontPos;
 	// プレイヤーの追従を行うかどうか
@@ -48,10 +45,6 @@ private:
 
 	// プレイヤーアクタ
 	AActor* m_pPlayerActor;
-
-	// カメラを移動させるかどうか
-	bool m_MoveHight;
-	bool m_MoveWidth;
 
 	// カメラの揺れに使用する
 	int m_shockCount;				// 揺れる回数	
@@ -84,7 +77,7 @@ public:
 		float m_LenghHight;				// 現在の座標とプレイヤーとの距離が長いなら移動させる
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-		float m_MaxSpeed;				// カメラが移動できる速度の最大値
+		float m_MaxSpeed;				// カメラが移動できる範囲の最大値
 
 public:
 	// パラメータを外部より調整（カメラのスクロールを止めたいときはカメラ停止位置のアクターを引数に入れてこれを呼ぶ）
@@ -131,9 +124,6 @@ private:
 
 	// スプラインを探索
 	void SearchSpline();
-
-	// カメラが範囲外にいる場合範囲に戻す
-	//void CheckInPos();
 
 	// カメラをプレイヤーに追従させる
 	void MovePlayerCamera();

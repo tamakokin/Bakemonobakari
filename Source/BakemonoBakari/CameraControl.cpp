@@ -17,27 +17,23 @@
 
 ACameraControl::ACameraControl() :
 	m_pActor(NULL),
-	m_NowDistance(800.0f),
+	m_NowDistance(600.0f),
 	m_NowSpeed(0.0f),
-	m_OldPos(FVector::ZeroVector),
-	m_FrontPos(FVector(0.0f, -150.0f, 0.0f)),
 	m_Player(true),
 	m_pPlayerActor(NULL),
-	m_MoveHight(true),
-	m_MoveWidth(true),
 	m_shockCount(0),
 	m_shockTiming(0),
 	m_shockMaxWidth(0.0f),
 	m_shockMaxHeight(0.0f),
 	m_shockStart(false),
-	m_AdjustmentPos(FVector(0.0f, 150.0f, 0.0f)),
+	m_AdjustmentPos(FVector(0.0f, 70.0f, 0.0f)),
 	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
-	m_SpeedWidth(70.0f),
-	m_Distance(800.0f),
-	m_LenghWidth(400.0f),
+	m_SpeedWidth(3.0f),
+	m_Distance(600.0f),
+	m_LenghWidth(80.0f),
 	m_LenghHight(100.0f),
-	m_MaxSpeed(10.0f)
+	m_MaxSpeed(14.0f)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -154,6 +150,7 @@ void ACameraControl::Tick(float DeltaTime)
 	{
 		Shock();
 	}
+
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -188,12 +185,11 @@ void ACameraControl::MovePlayerCamera()
 	targetPos += m_FrontPos;
 	float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
 
-	// ˆÚ“®‘¬“x‚ð§ŒÀ‚·‚é
-	if ((speed > 0) && (speed > m_MaxSpeed))
+	if ((speed > 0.0f) && (speed > m_MaxSpeed))
 	{
 		speed = m_MaxSpeed;
 	}
-	else if ((speed < 0) && (speed < -m_MaxSpeed))
+	else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
 	{
 		speed = -m_MaxSpeed;
 	}
@@ -276,31 +272,3 @@ bool ACameraControl::CheckInCamera(FVector _pos, FVector _size)
 	return true;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
-//// ƒJƒƒ‰‚ª”ÍˆÍŠO‚É‚¢‚éê‡”ÍˆÍ‚É–ß‚·-----------------------------------------------------------------------------------------------------------------------------------------------
-//void ACameraControl::CheckInPos()
-//{
-//	float width = GetActorLocation().Y;
-//	float hight = GetActorLocation().Z;
-//
-//	auto max = [](float& _pos, float _value)
-//	{
-//		if (_pos > _value)
-//		{
-//			_pos = _value;
-//		}
-//	};
-//	auto min = [](float& _pos, float _value)
-//	{
-//		if (_pos < _value)
-//		{
-//			_pos = _value;
-//		}
-//	};
-//	max(width, m_MaxPos.Y);
-//	max(hight, m_MaxPos.Z);
-//	min(width, m_MinPos.Y);
-//	min(hight, m_MinPos.Z);
-//
-//	SetActorLocation(FVector(GetActorLocation().X, width, hight));
-//}
-////-----------------------------------------------------------------------------------------------------------------------------------------------
