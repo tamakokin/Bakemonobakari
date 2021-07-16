@@ -46,7 +46,6 @@ void ACameraControl::BeginPlay()
 
 	// 速度と距離の初期化
 	m_NowSpeed = m_SpeedWidth;
-	m_NowDistance = m_Distance;
 
 	// プレイヤーアクターを検索する
 	SearchPlayer();
@@ -60,7 +59,7 @@ void ACameraControl::BeginPlay()
 	}
 
 	// カメラの初期位置を初期化
-	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_NowDistance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
+	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_Distance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -178,7 +177,7 @@ void ACameraControl::MovePlayerCamera()
 	}
 
 	// 移動後の目標座標を設定
-	FVector targetPos = FVector(m_TargetPos.X + m_NowDistance, m_TargetPos.Y, m_TargetPos.Z);
+	FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
 	FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f, 0.0f);
 
 	// 横移動分を加算
@@ -209,7 +208,7 @@ void ACameraControl::MoveCamera()
 {
 	if (!m_pActor)return;
 	// 移動後の目標座標を設定
-	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_NowDistance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
+	FVector targetPos = FVector(m_pActor->GetActorLocation().X + m_Distance, m_pActor->GetActorLocation().Y, m_pActor->GetActorLocation().Z);
 
 	FVector move = (targetPos - GetActorLocation()) / m_NowSpeed;
 
