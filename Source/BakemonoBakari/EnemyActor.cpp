@@ -34,6 +34,7 @@ AEnemyActor::AEnemyActor()
 	// メッシュを探す
 	m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 
+
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	// 画面何にいるかを判別するコンポーネントの生成
 	m_pCheckInScreen = CreateDefaultSubobject<UCheckInScreen>(TEXT("CheckInScreen"));
@@ -74,7 +75,7 @@ void AEnemyActor::Tick(float DeltaTime)
 	// 死んでるのなら処理しない
 	if (m_EnemyState == ENEMY_STATE_DESTROY)
 	{
-		Des();
+		//Des();
 		return;
 	}
 
@@ -100,6 +101,8 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 {
 	// オーバーラップしたアクターを格納
 	m_pOverlappedActor = OtherActor;
+
+	UE_LOG(LogTemp, Warning, TEXT("AAA"));
 
 	// アクターのポインターがぬるでなければ
 	if (m_pOverlappedActor != NULL)
@@ -176,7 +179,7 @@ void AEnemyActor::EnemyDamage()
 	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY)) return;
 
 	m_EnemyState = ENEMY_STATE_DAMAGE;
-	EnemyDamageEvent();
+	//EnemyDamageEvent();
 
 	//------------------------------------------------
 	//hitエフェクト生成が入る
