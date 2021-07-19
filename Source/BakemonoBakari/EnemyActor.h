@@ -86,10 +86,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Function")
 		// ダメージ処理
 		void EnemyDamage();
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		// ダメージ処理
-		void EnemyDamageEvent();
-
 
 // アニメーション管理用
 private:	
