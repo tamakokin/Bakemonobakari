@@ -205,7 +205,7 @@ void AEnemyActor::EnemyDamage()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
-		//Des();
+		Des();
 	}
 }
 
