@@ -102,8 +102,6 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 	// オーバーラップしたアクターを格納
 	m_pOverlappedActor = OtherActor;
 
-	UE_LOG(LogTemp, Warning, TEXT("AAA"));
-
 	// アクターのポインターがぬるでなければ
 	if (m_pOverlappedActor != NULL)
 	{
@@ -205,7 +203,7 @@ void AEnemyActor::EnemyDamage()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
-		Des();
+		//Des();
 	}
 }
 
