@@ -203,6 +203,9 @@ void AEnemyActor::EnemyDamage()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
+
+		m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//Des();
 	}
 }
