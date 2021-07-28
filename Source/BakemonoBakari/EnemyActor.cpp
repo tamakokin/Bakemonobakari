@@ -11,6 +11,7 @@
 #include "MyGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "CheckInScreen.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
 AEnemyActor::AEnemyActor()
@@ -66,32 +67,30 @@ void AEnemyActor::Tick(float DeltaTime)
 	{
 		m_pEnemyMesh->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
 	}
-	else 
+	else
 	{
 		// メッシュを探す
 		m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
-	}
-
-	// 死んでるのなら処理しない
-	if (m_EnemyState == ENEMY_STATE_DESTROY)
-	{
-		//Des();
-		return;
 	}
 
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	if (!m_pCheckInScreen->Check(GetActorLocation()))
 	{
 		m_IsInScreen = false;
-		Des();
 		return;
 	}
-	else if (m_EnemyState != ENEMY_STATE_DESTROY)
+	else if ((m_EnemyState != ENEMY_STATE_DESTROY)&&(m_EnemyDamageCount <= 0))
 	{
 		m_IsInScreen = true;
-		Indication();
+		MeshOn();
+		CollisionOn();
 	}
 
+	// 無敵時間なら点滅させる
+	if (m_EnemyDamageCount > 0)
+	{
+		EnemyFlashing();
+	}
 	// ステータスの更新
 	EnemyStatusControl(DeltaTime);
 }
@@ -122,7 +121,6 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 		else if (m_pOverlappedActor->ActorHasTag("Hole"))
 		{
 			m_EnemyState = ENEMY_STATE_DESTROY;
-			Des();
 		}
 	}
 	m_pOverlappedActor = NULL;
@@ -140,16 +138,23 @@ void AEnemyActor::EnemyDamage()
 	// ダメージ状態だったら
 	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY)) return;
 
-	m_EnemyState = ENEMY_STATE_DAMAGE;
+	// 無敵状態なら
+	if (m_EnemyDamageCount > 0)return;
 
-	//------------------------------------------------
-	//hitエフェクト生成が入る
-	//------------------------------------------------
+	// 無敵状態にする
+	m_EnemyDamageCount = 1;
+
+	// 当たり判定の無効化
+	CollisionOff();
+
+	// ヒットエフェクト生成
+	//Hit();
+
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
-	m_EnemyState = ENEMY_STATE_DAMAGE;
+	//m_EnemyState = ENEMY_STATE_DAMAGE;
 	ChangeAnim();
-	UE_LOG(LogTemp, Warning, TEXT("Hit"));
+
 	if (m_EnemyHP <= 0)
 	{
 		//------------------------------------------------
@@ -166,12 +171,45 @@ void AEnemyActor::EnemyDamage()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
-
-		// コライダーを無効か
-		m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		if (m_EnemyHPMax <= 1) 
+		{
+			MeshOff();
+		}
 	}
 }
+
+// 無敵時のマテリアルの変化------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// 無敵時間開始
+void AEnemyActor::EnemyFlashing()
+{
+	int redCount = 5.0f;
+
+	m_EnemyDamageCount++;
+
+	if ((m_EnemyDamageCount % (redCount * 2)) == 0)
+	{
+		// マテリアル側の「Opacity」パラメータに数値を設定する
+		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
+	}
+	else if ((m_EnemyDamageCount % redCount) == 0)
+	{
+		// マテリアル側の「Opacity」パラメータに数値を設定する
+		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.3f,0.0f,0.0f));
+	}
+
+	// 無敵時間の終了
+	if (m_EnemyDamageCount >= 50) 
+	{
+		m_EnemyDamageCount = 0;
+		// マテリアル側の「Opacity」パラメータに数値を設定する
+		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
+
+		// コライダーを復帰
+		CollisionOn();
+	}
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // 初期化
 void AEnemyActor::ReStartPosition()
@@ -181,14 +219,50 @@ void AEnemyActor::ReStartPosition()
 
 	SetActorLocation(m_initEnemyPosition);
 	SetActorRotation(m_StartRote);
+
+	// マテリアル側の「Opacity」パラメータに数値を設定する
+	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
+	m_EnemyDamageCount = 0;
 }
 
 // 状態の初期化
 // アニメーション切り替え
-void AEnemyActor::ReSetState() 
+void AEnemyActor::ReSetState()
 {
 	m_EnemyState = ENEMY_STATE_IDLE;
 }
+
+// 当たり判定の無効化------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AEnemyActor::CollisionOff() 
+{
+	m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// 当たり判定の有効化------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AEnemyActor::CollisionOn()
+{
+	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY))return;
+	m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// メッシュの表示------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AEnemyActor::MeshOn() 
+{
+	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY))return;
+	m_pEnemyMesh->SetVisibility(true);
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// メッシュの非表示------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AEnemyActor::MeshOff()
+{
+	m_pEnemyMesh->SetVisibility(false);
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // アニメーション切り替え
 void AEnemyActor::ChangeAnim()

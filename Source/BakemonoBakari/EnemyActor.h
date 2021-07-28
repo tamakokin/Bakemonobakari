@@ -51,13 +51,25 @@ public:
 	// 毎フレームの処理
 	virtual void Tick(float DeltaTime) override;
 
-	// 死亡処理
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		void Des();
+	// コライダー非表示処理
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+		void CollisionOff();
 
-	// 表示処理
-	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
-		void Indication();
+	// コライダー表示処理
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+		void CollisionOn();
+
+	// メッシュの表示処理
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+		void MeshOn();
+
+	// メッシュの非表示処理
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+		void MeshOff();
+
+	//// ヒットエフェクトを出す処理
+	//UFUNCTION(BlueprintCallable, Category = "Enemy")
+	//	void Hit();
 
 	// 初期化処理
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
@@ -81,6 +93,9 @@ private:
 
 	// アニメーション変更処理
 	void ChangeAnim();
+
+	// ダメージを受けた際に点滅させる
+	void EnemyFlashing();
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Function")
@@ -189,8 +204,7 @@ private:
 	bool	m_bDestroy;
 	bool	m_bStopping;
 	bool	m_bAttacking;
-	float	m_EnemyDamageAnimationCount;	// ダメージアニメーションカウント用
-	float	m_EnemyAttackAnimationCount;	// ダメージアニメーションカウント用
+	int	m_EnemyDamageCount;				// ダメージ後の無敵時間カウント用
 
 private:
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス
