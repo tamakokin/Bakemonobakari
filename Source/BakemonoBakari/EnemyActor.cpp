@@ -131,42 +131,6 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 // エネミーステータスコントロール
 void AEnemyActor::EnemyStatusControl(float _deltaTime)
 {
-	//// 死亡時
-	//if (m_EnemyState == ENEMY_STATE_DESTROY)
-	//{
-	//	// 死亡アニメーション時間カウント
-	//}
-	//// 硬直状態の時
-	//else if (m_EnemyState == ENEMY_STATE_STOP)
-	//{
-	//	// 硬直アニメーション時間カウント
-	//}
-	//// ダメージ状態
-	//else if (m_EnemyState == ENEMY_STATE_DAMAGE)
-	//{
-	//	// ダメージアニメーションカウント
-	//	m_EnemyDamageAnimationCount += _deltaTime;
-
-	//	if (m_EnemyDamageAnimationCount > m_DamageAnimationTime)
-	//	{
-	//		m_EnemyState = ENEMY_STATE_IDLE;
-	//		m_EnemyDamageAnimationCount = 0.f;
-	//		ChangeAnim();
-	//	}
-	//}
-	//else if (m_EnemyState == ENEMY_STATE_ATTACK)
-	//{
-	//	// 攻撃カウント
-	//	m_EnemyAttackAnimationCount += _deltaTime;
-
-	//	if (m_EnemyAttackAnimationCount > m_AttackAnimationTime)
-	//	{
-	//		m_EnemyState = ENEMY_STATE_IDLE;
-	//		m_EnemyAttackAnimationCount = 0.f;
-	//		ChangeAnim();
-	//	}
-	//}
-
 	ChangeAnim();
 }
 
@@ -177,7 +141,6 @@ void AEnemyActor::EnemyDamage()
 	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY)) return;
 
 	m_EnemyState = ENEMY_STATE_DAMAGE;
-	//EnemyDamageEvent();
 
 	//------------------------------------------------
 	//hitエフェクト生成が入る
@@ -186,7 +149,7 @@ void AEnemyActor::EnemyDamage()
 	--m_EnemyHP;
 	m_EnemyState = ENEMY_STATE_DAMAGE;
 	ChangeAnim();
-
+	UE_LOG(LogTemp, Warning, TEXT("Hit"));
 	if (m_EnemyHP <= 0)
 	{
 		//------------------------------------------------
@@ -204,9 +167,9 @@ void AEnemyActor::EnemyDamage()
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
 
+		// コライダーを無効か
 		m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		//Des();
 	}
 }
 
@@ -237,6 +200,7 @@ void AEnemyActor::ChangeAnim()
 		break;
 
 	case AEnemyActor::ENEMY_STATE_MOVE:
+		UE_LOG(LogTemp, Warning, TEXT("Anime1"));
 		m_bIdling = false;
 		m_bDamage = false;
 		m_bMoving = true;
@@ -264,6 +228,7 @@ void AEnemyActor::ChangeAnim()
 		break;
 
 	case AEnemyActor::ENEMY_STATE_DESTROY:
+		UE_LOG(LogTemp, Warning, TEXT("Anime"));
 		m_bIdling = false;
 		m_bDamage = false;
 		m_bMoving = false;

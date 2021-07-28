@@ -129,7 +129,13 @@ public:
 public:
 	// エネミーのステータスをコンポーネントに伝える
 	ENEMY_STATE GetEnmeyState()const { return m_EnemyState; }
-	void SetEnemyState(const ENEMY_STATE _enemyState) { m_EnemyState = _enemyState; }
+	void SetEnemyState(const ENEMY_STATE _enemyState)
+	{
+		if ((m_EnemyState != ENEMY_STATE_DESTROY)&&(m_EnemyState != ENEMY_STATE_DAMAGE))
+		{ 
+			m_EnemyState = _enemyState; 
+		} 
+	}
 
 	// プレイヤーがオーバーラップしたことをコンポーネントに伝える
 	AActor* GetOverlappedActor()const { return m_pOverlappedActor; }
