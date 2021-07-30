@@ -77,6 +77,10 @@ void AEnemyActor::Tick(float DeltaTime)
 	if (!m_pCheckInScreen->Check(GetActorLocation()))
 	{
 		m_IsInScreen = false;
+		// “–‚½‚è”»’è‚Ì–³Œø‰»
+		CollisionOff();
+		// ƒƒbƒVƒ…‚Ì–³Œø‰»
+		MeshOff();
 		return;
 	}
 	else if ((m_EnemyState != ENEMY_STATE_DESTROY)&&(m_EnemyDamageCount <= 0))
@@ -170,11 +174,6 @@ void AEnemyActor::EnemyDamage()
 		if (m_crashSound != NULL)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
-		}
-		
-		if (m_EnemyHPMax <= 1) 
-		{
-			MeshOff();
 		}
 	}
 }
