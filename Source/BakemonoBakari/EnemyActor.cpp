@@ -152,7 +152,31 @@ void AEnemyActor::EnemyDamage()
 	CollisionOff();
 
 	// ヒットエフェクト生成
-	//Hit();
+	// アクター生成用
+	FString BulletPath;
+	TSubclassOf<class AActor> subClass;
+	FVector location;
+	FRotator rotation;
+	AActor* actor;
+	// BPがあるパスを指定
+
+	BulletPath = "/Game/Effects/Hit_EffectBP.Hit_EffectBP_C";
+	// パス指定したBPのアクタークラスを格納
+	subClass = TSoftClassPtr<AActor>(FSoftObjectPath(BulletPath)).LoadSynchronous();
+
+	if (subClass)
+	{
+		// 位置と回転を設定
+		location = GetActorLocation();
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *m_pEnemyMesh->Bounds.BoxExtent.ToString());
+
+		// エネミーにめり込まないよに前に出す
+		location.X += 100.0f;
+		rotation = FRotator(0.0f, 0.0f, 0.0f);
+
+		// 設定した値を反映してスポーン
+		actor = GetWorld()->SpawnActor<AActor>(subClass, location, rotation);
+	}
 
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
