@@ -159,6 +159,9 @@ public:
 	// 初期座標をコンポーネントで扱う
 	FVector GetStartPos()const { return m_initEnemyPosition; }
 
+	// 行動を起こせる状態かを判別
+	bool GetIsAction() { return m_IsAction; }
+
 public:
 	// blueprint EditAnywhere
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -179,7 +182,6 @@ public:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, ClampMax = 15))
 		int m_EnemyHPMax;		// 敵の最大ＨＰ
 
-	int m_EnemyHP;				// 敵の現在のHP
 
 	UPROPERTY(EditAnywhere)
 		int m_score;			// 敵を倒した場合に獲得できるスコア
@@ -190,12 +192,14 @@ public:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
 		float m_AttackAnimationTime;		// 攻撃のアニメーション時間
 
-		bool m_IsInScreen;					// 画面内いるかどうか
-
 private:
 
 	FVector m_initEnemyPosition;			// 初期位置
 	FRotator m_StartRote;					// エネミーの初期回転
+
+	int     m_EnemyHP;						// 敵の現在のHP
+	bool    m_IsAction;						// 行動可能かどうか
+	bool    m_IsInScreen;					// 画面内いるかどうか
 
 	// アニメーション切り替え用
 	bool	m_bIdling;
@@ -204,9 +208,10 @@ private:
 	bool	m_bDestroy;
 	bool	m_bStopping;
 	bool	m_bAttacking;
+
 	int	m_EnemyDamageCount;				// ダメージ後の無敵時間カウント用
 
-private:
+
 	ENEMY_STATE m_EnemyState;			// エネミーのステータス
 	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
 	AActor* m_pPlayerCharacter;
