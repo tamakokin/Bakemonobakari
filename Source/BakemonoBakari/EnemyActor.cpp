@@ -55,6 +55,9 @@ void AEnemyActor::BeginPlay()
 
 	// HPの初期化
 	m_EnemyHP = m_EnemyHPMax;
+
+	// 行動可能状態にする
+	m_IsAction = true;
 }
 
 // 毎フレームの処理
@@ -81,10 +84,15 @@ void AEnemyActor::Tick(float DeltaTime)
 		CollisionOff();
 		// メッシュの無効化
 		MeshOff();
+
+		// 行動できないようにする
+		m_IsAction = false;
 		return;
 	}
 	else if ((m_EnemyState != ENEMY_STATE_DESTROY)&&(m_EnemyDamageCount <= 0))
 	{
+		// 行動可能状態にする
+		m_IsAction = true;
 		m_IsInScreen = true;
 		MeshOn();
 		CollisionOn();
@@ -145,43 +153,23 @@ void AEnemyActor::EnemyDamage()
 	// 無敵状態なら
 	if (m_EnemyDamageCount > 0)return;
 
+	// 行動不能状態にする
+	m_IsAction = false;
+
 	// 無敵状態にする
 	m_EnemyDamageCount = 1;
 
+	// ダメージを受けた状態にする
+	m_EnemyState = ENEMY_STATE_DAMAGE;
+
 	// 当たり判定の無効化
 	CollisionOff();
-
-	// ヒットエフェクト生成
-	// アクター生成用
-	FString BulletPath;
-	TSubclassOf<class AActor> subClass;
-	FVector location;
-	FRotator rotation;
-	AActor* actor;
-	// BPがあるパスを指定
-
-	BulletPath = "/Game/Effects/Hit_EffectBP.Hit_EffectBP_C";
-	// パス指定したBPのアクタークラスを格納
-	subClass = TSoftClassPtr<AActor>(FSoftObjectPath(BulletPath)).LoadSynchronous();
-
-	if (subClass)
-	{
-		// 位置と回転を設定
-		location = GetActorLocation();
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *m_pEnemyMesh->Bounds.BoxExtent.ToString());
-
-		// エネミーにめり込まないよに前に出す
-		location.X += 100.0f;
-		rotation = FRotator(0.0f, 0.0f, 0.0f);
-
-		// 設定した値を反映してスポーン
-		actor = GetWorld()->SpawnActor<AActor>(subClass, location, rotation);
-	}
 
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
 	//m_EnemyState = ENEMY_STATE_DAMAGE;
 	ChangeAnim();
+
 
 	if (m_EnemyHP <= 0)
 	{
@@ -190,7 +178,7 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		m_EnemyState = ENEMY_STATE_DESTROY;
 		ChangeAnim();
-
+		
 		// スコアを加算する
 		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
 
@@ -222,7 +210,7 @@ void AEnemyActor::EnemyFlashing()
 	}
 
 	// 無敵時間の終了
-	if (m_EnemyDamageCount >= 50) 
+	if (m_EnemyDamageCount >= 20) 
 	{
 		m_EnemyDamageCount = 0;
 		// マテリアル側の「Opacity」パラメータに数値を設定する
@@ -230,6 +218,11 @@ void AEnemyActor::EnemyFlashing()
 
 		// コライダーを復帰
 		CollisionOn();
+
+		if (m_EnemyState == ENEMY_STATE_DAMAGE)
+		{
+			m_EnemyState = ENEMY_STATE_IDLE;
+		}
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -297,7 +290,6 @@ void AEnemyActor::ChangeAnim()
 		break;
 
 	case AEnemyActor::ENEMY_STATE_MOVE:
-		UE_LOG(LogTemp, Warning, TEXT("Anime1"));
 		m_bIdling = false;
 		m_bDamage = false;
 		m_bMoving = true;
@@ -325,7 +317,6 @@ void AEnemyActor::ChangeAnim()
 		break;
 
 	case AEnemyActor::ENEMY_STATE_DESTROY:
-		UE_LOG(LogTemp, Warning, TEXT("Anime"));
 		m_bIdling = false;
 		m_bDamage = false;
 		m_bMoving = false;
