@@ -167,7 +167,6 @@ void AEnemyActor::EnemyDamage()
 
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
-	//m_EnemyState = ENEMY_STATE_DAMAGE;
 	ChangeAnim();
 
 
@@ -208,9 +207,17 @@ void AEnemyActor::EnemyFlashing()
 		// マテリアル側の「Opacity」パラメータに数値を設定する
 		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.3f,0.0f,0.0f));
 	}
-
+	//ダメージアニメーションの終了
+	if (m_EnemyDamageCount >= 10)
+	{
+		if (m_EnemyState == ENEMY_STATE_DAMAGE)
+		{
+			m_EnemyState = ENEMY_STATE_IDLE;
+			m_IsAction = true;
+		}
+	}
 	// 無敵時間の終了
-	if (m_EnemyDamageCount >= 20) 
+	if (m_EnemyDamageCount >= 50) 
 	{
 		m_EnemyDamageCount = 0;
 		// マテリアル側の「Opacity」パラメータに数値を設定する
@@ -218,11 +225,6 @@ void AEnemyActor::EnemyFlashing()
 
 		// コライダーを復帰
 		CollisionOn();
-
-		if (m_EnemyState == ENEMY_STATE_DAMAGE)
-		{
-			m_EnemyState = ENEMY_STATE_IDLE;
-		}
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
