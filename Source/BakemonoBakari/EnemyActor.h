@@ -67,9 +67,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 		void MeshOff();
 
-	//// ヒットエフェクトを出す処理
-	//UFUNCTION(BlueprintCallable, Category = "Enemy")
-	//	void Hit();
+	// ヒットエフェクトを出す処理
+	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
+		void Hit();
 
 	// 初期化処理
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")

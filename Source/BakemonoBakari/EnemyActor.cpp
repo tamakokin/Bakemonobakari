@@ -162,6 +162,9 @@ void AEnemyActor::EnemyDamage()
 	// ダメージを受けた状態にする
 	m_EnemyState = ENEMY_STATE_DAMAGE;
 
+	// ヒットエフェクトを出す
+	Hit();
+
 	// 当たり判定の無効化
 	CollisionOff();
 
