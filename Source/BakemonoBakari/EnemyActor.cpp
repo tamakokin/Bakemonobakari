@@ -235,6 +235,8 @@ void AEnemyActor::EnemyFlashing()
 // 初期化
 void AEnemyActor::ReStartPosition()
 {
+	UE_LOG(LogTemp, Warning, TEXT("VV"));
+
 	m_EnemyHP = m_EnemyHPMax;
 	m_EnemyState = ENEMY_STATE_IDLE;
 
@@ -244,6 +246,9 @@ void AEnemyActor::ReStartPosition()
 	// マテリアル側の「Opacity」パラメータに数値を設定する
 	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
 	m_EnemyDamageCount = 0;
+
+	CollisionOn();
+	MeshOn();
 }
 
 // 状態の初期化
