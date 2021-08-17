@@ -170,7 +170,7 @@ public:
 		USkeletalMeshComponent* m_pEnemyMesh;	// メッシュ
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class USoundBase* m_crashSound;			// 消滅時の音
+		class USoundBase* m_EnemyDamageSound;	// ダメージ時の音
 
 private:
 	UPROPERTY()
