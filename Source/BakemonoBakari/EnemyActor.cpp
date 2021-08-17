@@ -6,7 +6,6 @@
 //			：2021/5/17 ジャンプする敵の行動プログラムを追加
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
-//			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
 //           
 #include "EnemyActor.h"
 #include "MyGameInstance.h"
@@ -59,12 +58,6 @@ void AEnemyActor::BeginPlay()
 
 	// 行動可能状態にする
 	m_IsAction = true;
-}
-
-// 毎フレームの処理
-void AEnemyActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
 	//	オーバーラップ接触し始めた時に呼ばれるイベント関数を記録
 	if (m_pEnemyMesh)
@@ -75,7 +68,15 @@ void AEnemyActor::Tick(float DeltaTime)
 	{
 		// メッシュを探す
 		m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+		m_pEnemyMesh->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
+
 	}
+}
+
+// 毎フレームの処理
+void AEnemyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	if (!m_pCheckInScreen->Check(GetActorLocation()))
@@ -90,7 +91,7 @@ void AEnemyActor::Tick(float DeltaTime)
 		m_IsAction = false;
 		return;
 	}
-	else if ((m_EnemyState != ENEMY_STATE_DESTROY)&&(m_EnemyDamageCount <= 0))
+	else if ((m_EnemyState != ENEMY_STATE_DESTROY) && (m_EnemyDamageCount <= 0))
 	{
 		// 行動可能状態にする
 		m_IsAction = true;
@@ -100,12 +101,13 @@ void AEnemyActor::Tick(float DeltaTime)
 	}
 
 	// 無敵時間なら点滅させる
-	if (m_EnemyDamageCount > 0)
+	if ((m_EnemyDamageCount > 0)&&((m_EnemyState != ENEMY_STATE_DESTROY)))
 	{
 		EnemyFlashing();
 	}
+
 	// ステータスの更新
-	EnemyStatusControl(DeltaTime);
+	ChangeAnim();
 }
 
 // オーバーラップ関数
@@ -123,13 +125,6 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 			// ダメージを与える
 			EnemyDamage();
 		}
-
-		// 接触したアクターのタグがプレイヤーであれば
-		else if (m_pOverlappedActor->ActorHasTag("PlayerCharacter"))
-		{
-			//// 動きを止める
-			//EnemyStop();
-		}
 		// 穴に落ちると死亡
 		else if (m_pOverlappedActor->ActorHasTag("Hole"))
 		{
@@ -139,20 +134,13 @@ UFUNCTION() void AEnemyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 	m_pOverlappedActor = NULL;
 }
 
-// エネミーステータスコントロール
-void AEnemyActor::EnemyStatusControl(float _deltaTime)
-{
-	ChangeAnim();
-}
-
 // ダメージ関数
 void AEnemyActor::EnemyDamage()
 {
-	// ダメージ状態だったら
-	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY)) return;
-
 	// 無敵状態なら
 	if (m_EnemyDamageCount > 0)return;
+
+	UE_LOG(LogTemp, Warning, TEXT("%d"), m_EnemyHP);
 
 	// 行動不能状態にする
 	m_IsAction = false;
@@ -163,6 +151,9 @@ void AEnemyActor::EnemyDamage()
 	// ダメージを受けた状態にする
 	m_EnemyState = ENEMY_STATE_DAMAGE;
 
+	// 赤色にする
+	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.3f, 0.0f, 0.0f));
+
 	// ヒットエフェクトを出す
 	Hit();
 
@@ -171,8 +162,6 @@ void AEnemyActor::EnemyDamage()
 
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
-	ChangeAnim();
-
 
 	if (m_EnemyHP <= 0)
 	{
@@ -181,22 +170,14 @@ void AEnemyActor::EnemyDamage()
 		//------------------------------------------------
 		m_EnemyState = ENEMY_STATE_DESTROY;
 		ChangeAnim();
-		
+
 		// スコアを加算する
 		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
 
-		// 倒しきった音を出す
-		if (m_EnemyLethalDamageSound != NULL)
+		// 攻撃音を出す
+		if (m_crashSound != NULL)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyLethalDamageSound, GetActorLocation());
-		}
-	}
-	else
-	{
-		// 与ダメージ音を出す
-		if (m_EnemyDamageSound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyDamageSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
 		}
 	}
 }
@@ -205,36 +186,18 @@ void AEnemyActor::EnemyDamage()
 // 無敵時間開始
 void AEnemyActor::EnemyFlashing()
 {
-	int redCount = 5.0f;
-
 	m_EnemyDamageCount++;
 
-	if ((m_EnemyDamageCount % (redCount * 2)) == 0)
-	{
-		// マテリアル側の「Opacity」パラメータに数値を設定する
-		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
-	}
-	else if ((m_EnemyDamageCount % redCount) == 0)
-	{
-		// マテリアル側の「Opacity」パラメータに数値を設定する
-		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.3f,0.0f,0.0f));
-	}
-	//ダメージアニメーションの終了
-	if (m_EnemyDamageCount >= 10)
-	{
-		if (m_EnemyState == ENEMY_STATE_DAMAGE)
-		{
-			m_EnemyState = ENEMY_STATE_IDLE;
-			m_IsAction = true;
-		}
-	}
 	// 無敵時間の終了
-	if (m_EnemyDamageCount >= 50) 
+	if (m_EnemyDamageCount >= 30)
 	{
-		m_EnemyDamageCount = 0;
 		// マテリアル側の「Opacity」パラメータに数値を設定する
 		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
 
+		m_EnemyState = ENEMY_STATE_IDLE;
+		m_IsAction = true;
+
+		m_EnemyDamageCount = 0;
 		// コライダーを復帰
 		CollisionOn();
 	}
@@ -244,8 +207,6 @@ void AEnemyActor::EnemyFlashing()
 // 初期化
 void AEnemyActor::ReStartPosition()
 {
-	UE_LOG(LogTemp, Warning, TEXT("VV"));
-
 	m_EnemyHP = m_EnemyHPMax;
 	m_EnemyState = ENEMY_STATE_IDLE;
 
@@ -268,7 +229,7 @@ void AEnemyActor::ReSetState()
 }
 
 // 当たり判定の無効化------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-void AEnemyActor::CollisionOff() 
+void AEnemyActor::CollisionOff()
 {
 	m_pCapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	m_pEnemyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -285,7 +246,7 @@ void AEnemyActor::CollisionOn()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // メッシュの表示------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-void AEnemyActor::MeshOn() 
+void AEnemyActor::MeshOn()
 {
 	if ((m_EnemyState == ENEMY_STATE_DAMAGE) || (m_EnemyState == ENEMY_STATE_DESTROY))return;
 	m_pEnemyMesh->SetVisibility(true);
