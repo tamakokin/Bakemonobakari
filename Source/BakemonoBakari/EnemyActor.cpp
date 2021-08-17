@@ -6,6 +6,7 @@
 //			：2021/5/17 ジャンプする敵の行動プログラムを追加
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
+//			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
 //           
 #include "EnemyActor.h"
 #include "MyGameInstance.h"
@@ -165,12 +166,6 @@ void AEnemyActor::EnemyDamage()
 	// ヒットエフェクトを出す
 	Hit();
 
-	// ダメージ音を出す
-	if (m_EnemyDamageSound != NULL)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, m_EnemyDamageSound, GetActorLocation());
-	}
-
 	// 当たり判定の無効化
 	CollisionOff();
 
@@ -189,6 +184,20 @@ void AEnemyActor::EnemyDamage()
 		
 		// スコアを加算する
 		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
+
+		// 倒しきった音を出す
+		if (m_EnemyLethalDamageSound != NULL)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyLethalDamageSound, GetActorLocation());
+		}
+	}
+	else
+	{
+		// 与ダメージ音を出す
+		if (m_EnemyDamageSound != NULL)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyDamageSound, GetActorLocation());
+		}
 	}
 }
 
