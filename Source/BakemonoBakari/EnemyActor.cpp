@@ -165,6 +165,12 @@ void AEnemyActor::EnemyDamage()
 	// ヒットエフェクトを出す
 	Hit();
 
+	// ダメージ音を出す
+	if (m_EnemyDamageSound != NULL)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, m_EnemyDamageSound, GetActorLocation());
+	}
+
 	// 当たり判定の無効化
 	CollisionOff();
 
@@ -183,12 +189,6 @@ void AEnemyActor::EnemyDamage()
 		
 		// スコアを加算する
 		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
-
-		// 攻撃音を出す
-		if (m_crashSound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, m_crashSound, GetActorLocation());
-		}
 	}
 }
 
