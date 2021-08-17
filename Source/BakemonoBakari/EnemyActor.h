@@ -10,7 +10,6 @@
 //			：2021/6/ 9 アニメーションに必要な要素の追加
 //			：2021/6/7  リスタート時にエネミーを初期化する
 //			：			エネミーがやられた場合非表示にする
-//			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
 
 #pragma once
 
@@ -88,9 +87,6 @@ private:
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
-
-	// ステータスコントロール
-	void EnemyStatusControl(float _deltaTime);
 
 	// アニメーション変更処理
 	void ChangeAnim();
@@ -171,10 +167,7 @@ public:
 		USkeletalMeshComponent* m_pEnemyMesh;	// メッシュ
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class USoundBase* m_EnemyDamageSound;	// 与ダメージ時の音
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class USoundBase* m_EnemyLethalDamageSound;	// 倒しきった時の音
+		class USoundBase* m_crashSound;			// 消滅時の音
 
 private:
 	UPROPERTY()
