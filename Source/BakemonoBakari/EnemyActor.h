@@ -10,6 +10,7 @@
 //			：2021/6/ 9 アニメーションに必要な要素の追加
 //			：2021/6/7  リスタート時にエネミーを初期化する
 //			：			エネミーがやられた場合非表示にする
+//			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
 
 #pragma once
 
@@ -170,7 +171,10 @@ public:
 		USkeletalMeshComponent* m_pEnemyMesh;	// メッシュ
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class USoundBase* m_EnemyDamageSound;	// ダメージ時の音
+		class USoundBase* m_EnemyDamageSound;	// 与ダメージ時の音
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class USoundBase* m_EnemyLethalDamageSound;	// 倒しきった時の音
 
 private:
 	UPROPERTY()
