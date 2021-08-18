@@ -18,22 +18,18 @@
 ACameraControl::ACameraControl() :
 	m_pActor(NULL),
 	m_NowDistance(600.0f),
-	m_NowSpeed(0.0f),
+	m_NowSpeed(8.0f),
 	m_Player(true),
 	m_pPlayerActor(NULL),
-	m_shockCount(0),
-	m_shockTiming(0),
-	m_shockMaxWidth(0.0f),
-	m_shockMaxHeight(0.0f),
-	m_shockStart(false),
-	m_AdjustmentPos(FVector(0.0f, 70.0f, 0.0f)),
 	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(3.0f),
 	m_Distance(600.0f),
-	m_LenghWidth(80.0f),
+	m_LenghWidth(220.0f),
 	m_LenghHight(100.0f),
-	m_MaxSpeed(14.0f)
+	m_MaxSpeed(14.0f),
+	m_Move(false),
+	m_Right(true)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -47,8 +43,8 @@ void ACameraControl::BeginPlay()
 	// 速度と距離の初期化
 	m_NowSpeed = m_SpeedWidth;
 
-	// プレイヤーアクターを検索する
-	SearchPlayer();
+	// アクターを検索する
+	Search();
 
 	// プレイヤーを注目アクターにする
 	SetTargetPlayerActor();
@@ -58,28 +54,31 @@ void ACameraControl::BeginPlay()
 		m_pSpline[n]->Start();
 	}
 
+	SearchSpline();
+
 	// カメラの初期位置を初期化
-	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_Distance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
+	SetActorLocation(FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z));
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
-// プレイヤーアクターを検索する-----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::SearchPlayer()
+// アクターを検索する-----------------------------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::Search()
 {
-	// プレイヤーアクターを探索する
+	// アクターを探索する
 	TSubclassOf<AActor>findClass;
 	findClass = AActor::StaticClass();
 	TArray<AActor*>actors;
 	UGameplayStatics::GetAllActorsOfClass(this->GetWorld(), findClass, actors);
 
-	// プレイヤーを取得する
 	for (int i = 0; i < actors.Num(); i++)
 	{
+		// スプラインを探す
 		if (actors[i]->ActorHasTag("Spline"))
 		{
 			m_pSpline.Add(Cast<ACameraSpline>(actors[i]));
 		}
 
+		// プレイヤーを取得する
 		else if (actors[i]->ActorHasTag("PlayerCharacter"))
 		{
 			m_pPlayerActor = actors[i];
@@ -144,12 +143,6 @@ void ACameraControl::Tick(float DeltaTime)
 	{
 		MoveCamera();
 	}
-	// 揺れを行う
-	if (m_shockStart)
-	{
-		Shock();
-	}
-
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -164,42 +157,76 @@ void ACameraControl::MovePlayerCamera()
 	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
 	// カメラの移動を行うか判定する
-	if (FMath::Abs(relativeDistance) > m_LenghWidth)
+	if (m_Move)
 	{
-		if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
+		if (m_Right)
 		{
-			m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+			if (relativeDistance > m_AdjustmentPos.Y)
+			{
+				m_Move = false;
+			}
 		}
-		else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
+		else 
 		{
-			m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+			if (relativeDistance < -m_AdjustmentPos.Y)
+			{
+				m_Move = false;
+			}
+		}
+	}
+	else 
+	{
+		if (FMath::Abs(relativeDistance) > m_LenghWidth)
+		{
+			if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
+			{
+				m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+
+				m_Right = false;
+
+				m_Move = true;
+
+			}
+			else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
+			{
+				m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+
+				m_Right = true;
+
+				m_Move = true;
+
+			}
 		}
 	}
 
-	// 移動後の目標座標を設定
-	FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
-	FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f, 0.0f);
-
-	// 横移動分を加算
-	targetPos += m_FrontPos;
-	float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
-
-	if ((speed > 0.0f) && (speed > m_MaxSpeed))
+	// 移動を行う場合
+	if (m_Move)
 	{
-		speed = m_MaxSpeed;
+		// 移動後の目標座標を設定
+		FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
+		FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f, 0.0f);
+
+		// 横移動分を加算
+		targetPos += m_FrontPos;
+		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
+
+		if ((speed > 0.0f) && (speed > m_MaxSpeed))
+		{
+			speed = m_MaxSpeed;
+		}
+		else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
+		{
+			speed = -m_MaxSpeed;
+		}
+
+		move += FVector(0.0f, speed, 0.0f);
+
+		// 縦移動分を加算
+		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
+
+		// 移動
+		SetActorLocation(GetActorLocation() + move);
 	}
-	else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
-	{
-		speed = -m_MaxSpeed;
-	}
-
-	move += FVector(0.0f, speed, 0.0f);
-
-	// 縦移動分を加算
-	move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
-
-	// 移動
-	SetActorLocation(GetActorLocation() + move);
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -213,28 +240,6 @@ void ACameraControl::MoveCamera()
 	FVector move = (targetPos - GetActorLocation()) / m_NowSpeed;
 
 	SetActorLocation(GetActorLocation() + move);
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-
-// カメラを揺らす-----------------------------------------------------------------------------------------------------------------------------------------------
-
-void ACameraControl::Shock()
-{
-	if (m_shockCount % m_shockTiming == 0)
-	{
-		float width = FMath::RandRange(-m_shockMaxWidth, m_shockMaxWidth);
-		float hight = FMath::RandRange(-m_shockMaxHeight, m_shockMaxHeight);
-
-		SetActorLocation(FVector(0.0f, width, hight) + GetActorLocation());
-	}
-	// カウントを減らす
-	m_shockCount--;
-
-	// 揺らす状態をやめる
-	if (m_shockCount <= 0)
-	{
-		m_shockStart = false;
-	}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
