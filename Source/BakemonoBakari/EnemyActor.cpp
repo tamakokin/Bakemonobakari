@@ -102,7 +102,7 @@ void AEnemyActor::Tick(float DeltaTime)
 	}
 
 	// 無敵時間なら点滅させる
-	if ((m_EnemyDamageCount > 0)&&((m_EnemyState != ENEMY_STATE_DESTROY)))
+	if (m_EnemyDamageCount > 0)
 	{
 		EnemyFlashing();
 	}
@@ -140,8 +140,6 @@ void AEnemyActor::EnemyDamage()
 {
 	// 無敵状態なら
 	if (m_EnemyDamageCount > 0)return;
-
-	UE_LOG(LogTemp, Warning, TEXT("%d"), m_EnemyHP);
 
 	// 行動不能状態にする
 	m_IsAction = false;
@@ -198,11 +196,14 @@ void AEnemyActor::EnemyFlashing()
 	m_EnemyDamageCount++;
 
 	// 無敵時間の終了
-	if (m_EnemyDamageCount >= 30)
+	if (m_EnemyDamageCount >= 10)
 	{
 		// マテリアル側の「Opacity」パラメータに数値を設定する
 		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
-
+		
+	}
+	if ((m_EnemyDamageCount >= 30)&&(m_EnemyState != ENEMY_STATE_DESTROY))
+	{
 		m_EnemyState = ENEMY_STATE_IDLE;
 		m_IsAction = true;
 
