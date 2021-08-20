@@ -208,6 +208,54 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 				}
 			}
 		}
+		else if (IsAttack == true && IsJump)
+		{
+			if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
+			{
+				//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
+				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+				SetActorRotation(FRotator(0.f, -90.f, 0.f));
+				// add movement in that direction
+				AddMovementInput(FVector(0.f, -1.f, 0.f), Value+1.5f);
+				IsFaceRight = true;
+			}
+			else
+			{
+				if (Value < 0.0)
+				{
+					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+					SetActorRotation(FRotator(0.f, 90.f, 0.f));
+					// add movement in that direction
+					AddMovementInput(FVector(0.f, -1.f, 0.f), Value-1.5f);
+					IsFaceRight = false;
+				}
+			}
+		}
+
+		// 攻撃後の慣性
+		if (IsAttack)
+		{
+			if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
+			{
+				//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
+				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+				SetActorRotation(FRotator(0.f, -90.f, 0.f));
+				// add movement in that direction
+				AddMovementInput(FVector(0.f, -1.f, 0.f), 0.2f);
+				IsFaceRight = true;
+			}
+			else
+			{
+				if (Value < 0.0)
+				{
+					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+					SetActorRotation(FRotator(0.f, 90.f, 0.f));
+					// add movement in that direction
+					AddMovementInput(FVector(0.f, -1.f, 0.f), -0.2f);
+					IsFaceRight = false;
+				}
+			}
+		}
 	}
 }
 
