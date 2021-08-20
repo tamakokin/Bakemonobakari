@@ -20,6 +20,7 @@
 #include "EnemyActor.generated.h"
 
 class UCheckInScreen;
+class UEnemy_Rote_Component;
 
 // 敵の種類
 UENUM(BlueprintType)
@@ -185,13 +186,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		int m_score;			// 敵を倒した場合に獲得できるスコア
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_DamageAnimationTime;		// ダメージのアニメーション時間
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0.f, ClampMax = 5.f))
-		float m_AttackAnimationTime;		// 攻撃のアニメーション時間
-
 private:
 
 	FVector m_initEnemyPosition;			// 初期位置
@@ -209,11 +203,13 @@ private:
 	bool	m_bStopping;
 	bool	m_bAttacking;
 
-	int	m_EnemyDamageCount;				// ダメージ後の無敵時間カウント用
+	int	m_EnemyDamageCount;					// ダメージ後の無敵時間カウント用
 
 
-	ENEMY_STATE m_EnemyState;			// エネミーのステータス
-	AActor* m_pOverlappedActor;			// オーバーラップしたアクター
+	ENEMY_STATE m_EnemyState;				// エネミーのステータス
+	UEnemy_Rote_Component* m_pEnemyRote;	// エネミーをプレイヤーの方向に回転させる
+
+	AActor* m_pOverlappedActor;				// オーバーラップしたアクター
 	AActor* m_pPlayerCharacter;
 
 	UCheckInScreen* m_pCheckInScreen;
