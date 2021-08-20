@@ -12,6 +12,7 @@
 #include "MyGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "CheckInScreen.h"
+#include "Enemy_Rote_Component.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
@@ -40,7 +41,9 @@ AEnemyActor::AEnemyActor()
 	//			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 	// 画面何にいるかを判別するコンポーネントの生成
 	m_pCheckInScreen = CreateDefaultSubobject<UCheckInScreen>(TEXT("CheckInScreen"));
-
+	
+	// 方向転換を行うコンポーネントの生成
+	m_pEnemyRote = CreateDefaultSubobject<UEnemy_Rote_Component>(TEXT("UEnemy_Rote_Component"));
 }
 
 // ゲームスタート時、または生成時に呼ばれる処理
@@ -70,7 +73,6 @@ void AEnemyActor::BeginPlay()
 		// メッシュを探す
 		m_pEnemyMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 		m_pEnemyMesh->OnComponentBeginOverlap.AddDynamic(this, &AEnemyActor::OnOverlapBegin);
-
 	}
 }
 
@@ -165,11 +167,13 @@ void AEnemyActor::EnemyDamage()
 
 	if (m_EnemyHP <= 0)
 	{
-		//------------------------------------------------
-		//死亡エフェクト生成が入る
-		//------------------------------------------------
+
+		// 死亡アニメーション再生
 		m_EnemyState = ENEMY_STATE_DESTROY;
 		ChangeAnim();
+
+		// プレイヤーの方向を向く
+		m_pEnemyRote->EnemyRote();
 
 		// スコアを加算する
 		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
@@ -195,13 +199,15 @@ void AEnemyActor::EnemyFlashing()
 {
 	m_EnemyDamageCount++;
 
-	// 無敵時間の終了
+	// 赤色をもとに戻す
 	if (m_EnemyDamageCount >= 10)
 	{
 		// マテリアル側の「Opacity」パラメータに数値を設定する
 		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
 		
 	}
+
+	// アニメーションの終了
 	if ((m_EnemyDamageCount >= 30)&&(m_EnemyState != ENEMY_STATE_DESTROY))
 	{
 		m_EnemyState = ENEMY_STATE_IDLE;
