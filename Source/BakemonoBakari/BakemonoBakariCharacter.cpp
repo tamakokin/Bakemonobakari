@@ -11,6 +11,8 @@
 // 2021/07/05 更新者：伴野　梯子の上り下り機能の追加
 // 2021/07/05 更新者：伴野　左右入力を受け取った際、一度変数に保存するよう変更
 // 2021/07/08 更新者：伴野　梯子を登り切った際の処理を追加
+// 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
+// 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
@@ -127,6 +129,11 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 		IsDamage = true;			//ダメージ受けている
 		IsInvincible = true;		//無敵時間に入る
 		KnockBack(EnemyLocation);	//プレイヤーがノックバックされる
+	}
+	//Overlapしている時回復処理 8/20
+	if (IsRecoveryContack == true)
+	{
+		TakeRecovery(10.0f);
 	}
 
 	SetActorLocation(FVector(0.0f, GetActorLocation().Y, GetActorLocation().Z));
@@ -332,6 +339,16 @@ void ABakemonoBakariCharacter::TakeDamage(float _dmg)
 	}
 }
 
+//回復処理 8/20
+void ABakemonoBakariCharacter::TakeRecovery(float _recovery)
+{
+	if (m_info.hp < 100.0)
+	{
+		m_info.hp += _recovery;
+	}
+	IsRecoveryContack = false;
+}
+
 //ダメージを受けたらノックバックする処理 5/17
 void ABakemonoBakariCharacter::KnockBack(float _enemylocation)
 {
@@ -363,6 +380,11 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 			EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
 
 			LeaveLadder();		// 梯子から手を放す
+		}
+		//Overlapするオブジェクトは回復アイテムの場合
+		else if (OtherActor->ActorHasTag("Recovery"))
+		{
+			IsRecoveryContack = true;
 		}
 		//Overlapするオブジェクトは落し穴の場合
 		else if (OtherActor->ActorHasTag("Hole"))

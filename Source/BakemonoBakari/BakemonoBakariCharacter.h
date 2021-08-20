@@ -11,6 +11,8 @@
 // 2021/07/05 更新者：伴野　梯子の上り下り機能の追加
 // 2021/07/05 更新者：伴野　左右入力を受け取った際、一度変数に保存するよう変更
 // 2021/07/08 更新者：伴野　梯子を登り切った際の処理を追加
+// 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
+// 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 
 #pragma once
 
@@ -77,6 +79,11 @@ protected:
 	//ダメージを受ける処理 5/7
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void TakeDamage(float _dmg);
+
+	//回復処理 8/20 山田
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		void TakeRecovery(float _recovery);
+
 	//ダメージを受けたらノックバックする 5/17
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void KnockBack(float _enemylocation);
@@ -124,6 +131,9 @@ protected:
 	//敵と接触しているフラグ 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
 		bool IsEnemyContack;
+	//回復アイテムと接触しているフラグ 8/20
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlap")
+		bool IsRecoveryContack;
 	//敵の水平位置 5/19
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		float EnemyLocation;
