@@ -24,7 +24,10 @@ ACameraControl::ACameraControl() :
 	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(3.0f),
+	m_SpeedScaleUp(3.0f),
+	m_SpeedScaleDown(2.0f),
 	m_Distance(600.0f),
+	m_Distance_ScaleUpMagnification(0.5f),
 	m_LenghWidth(220.0f),
 	m_LenghHight(100.0f),
 	m_MaxSpeed(14.0f),
@@ -203,8 +206,9 @@ void ACameraControl::MovePlayerCamera()
 	if (m_Move)
 	{
 		// ˆÚ“®Œã‚Ì–Ú•WÀ•W‚ğİ’è
-		FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
-		FVector move = FVector((targetPos.X - GetActorLocation().X) / m_NowSpeed, 0.0f, 0.0f);
+		FVector targetPos = FVector(m_TargetPos.X + m_Distance * m_Distance_ScaleUpMagnification, m_TargetPos.Y, m_TargetPos.Z * m_Distance_ScaleUpMagnification);
+
+		FVector move;
 
 		// ‰¡ˆÚ“®•ª‚ğ‰ÁZ
 		targetPos += m_FrontPos;
@@ -223,6 +227,25 @@ void ACameraControl::MovePlayerCamera()
 
 		// cˆÚ“®•ª‚ğ‰ÁZ
 		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
+
+		// ‰œˆÚ“®•ª‚ğ‰ÁZ
+		move += FVector((targetPos.X - GetActorLocation().X) / m_SpeedScaleUp, 0.0f, 0.0f);
+
+		// ˆÚ“®
+		SetActorLocation(GetActorLocation() + move);
+	}
+	else
+	{
+		// ˆÚ“®Œã‚Ì–Ú•WÀ•W‚ğİ’è
+		FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
+
+		FVector move;
+
+		// cˆÚ“®•ª‚ğ‰ÁZ
+		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
+
+		// ‰œˆÚ“®•ª‚ğ‰ÁZ
+		move += FVector((targetPos.X - GetActorLocation().X) / m_SpeedScaleUp, 0.0f, 0.0f);
 
 		// ˆÚ“®
 		SetActorLocation(GetActorLocation() + move);
