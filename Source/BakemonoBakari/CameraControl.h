@@ -86,7 +86,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_SpeedWidth;						// カメラの横の移動速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_SpeedScaleUp;						// カメラの拡大速度
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_SpeedScaleDown;						// カメラの拡縮速度
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_Distance;						// カメラを配置する注目アクターからの奥行の距離
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+		float m_Distance_ScaleUpMagnification;	// 移動時に拡大する倍率
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_LenghWidth;						// 現在の座標とプレイヤーとの距離が長いなら移動させる
