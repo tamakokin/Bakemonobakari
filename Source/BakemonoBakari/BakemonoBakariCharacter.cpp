@@ -248,7 +248,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
 				SetActorRotation(FRotator(0.f, -90.f, 0.f));
 				// add movement in that direction
-				AddMovementInput(FVector(0.f, -1.f, 0.f), 0.2f);
+				AddMovementInput(FVector(0.f, -1.f, 0.f), 0.1f);
 				IsFaceRight = true;
 			}
 			else
@@ -258,7 +258,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
 					SetActorRotation(FRotator(0.f, 90.f, 0.f));
 					// add movement in that direction
-					AddMovementInput(FVector(0.f, -1.f, 0.f), -0.2f);
+					AddMovementInput(FVector(0.f, -1.f, 0.f), -0.1f);
 					IsFaceRight = false;
 				}
 			}
