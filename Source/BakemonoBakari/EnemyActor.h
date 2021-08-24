@@ -22,19 +22,6 @@
 class UCheckInScreen;
 class UEnemy_Rote_Component;
 
-// 敵の種類
-UENUM(BlueprintType)
-enum class ENEMY_TYPE :uint8
-{
-	ENEMY_TYPE_NONE = 0,
-	ENEMY_TYPE_STOP,			// 動かない
-	ENEMY_TYPE_STRAIGHT,		// まっすぐ移動
-	ENEMY_TYPE_JUMP,			// その場でジャンプ
-	ENEMY_TYPE_JUMP_STRAIGHT,	// 移動しながらジャンプ
-	ENEMY_TYPE_FIRING,			// 弾発射
-	ENEMY_TYPE_FRY,				// 飛ぶ
-};
-
 UCLASS()
 class BAKEMONOBAKARI_API AEnemyActor : public AActor
 {
@@ -163,12 +150,12 @@ public:
 public:
 	// blueprint EditAnywhere
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UCapsuleComponent* m_pCapsuleComp;		//	ターゲット接触用コリジョン
+		UCapsuleComponent* m_pCapsuleComp;			//	ターゲット接触用コリジョン
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USkeletalMeshComponent* m_pEnemyMesh;	// メッシュ
+		USkeletalMeshComponent* m_pEnemyMesh;		// メッシュ
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class USoundBase* m_EnemyDamageSound;	// 与ダメージ時の音
+		class USoundBase* m_EnemyDamageSound;		// 与ダメージ時の音
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class USoundBase* m_EnemyLethalDamageSound;	// 倒しきった時の音
