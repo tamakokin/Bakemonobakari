@@ -62,7 +62,7 @@ private:
 	void SearchSpline();
 
 	// カメラをプレイヤーに追従させる
-	void MovePlayerCamera();
+	void MovePlayerCamera(float _deltaTime);
 
 	// カメラを注目アクターに向けて移動させる(カメラの固定などに使用)
 	void MoveCamera();
@@ -88,13 +88,13 @@ public:
 		float m_SpeedHight;						// カメラの縦の移動速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_SpeedWidth;						// カメラの横の移動速度
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (DisplayName = "拡大速度", ClampMin = "0", ClampMax = "10"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "10"))
 		float m_ScaleUpTime;					// カメラの拡大速度
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (DisplayName = "縮小速度", ClampMin = "0", ClampMax = "10"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "10"))
 		float m_ScaleDownTime;					// カメラの縮小速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_Distance;						// カメラを配置する注目アクターからの奥行の距離
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (DisplayName = "拡大率", ClampMin = "0", ClampMax = "200"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "200"))
 		float m_Distance_ScaleUpMagnification;	// 移動時に拡大する倍率
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
@@ -120,6 +120,7 @@ private:
 
 	// 時間をカウント
 	float m_CountTime;
+	bool m_bCount;
 
 	// プレイヤーアクタ
 	AActor* m_pPlayerActor;
@@ -130,4 +131,9 @@ private:
 
 	// 右に移動するかどうか
 	bool m_Right;
+
+	// 切り替える前のカメラの座標
+	FVector m_PrevChangeCameraPos;
+	// ひとつ前のカメラの座標
+	FVector m_PrevCameraPos;
 };
