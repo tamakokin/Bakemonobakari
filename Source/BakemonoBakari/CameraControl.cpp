@@ -1,11 +1,8 @@
-// 2021 05/01 大金巧侑
-// カメラの移動処理を管理する
-// 2021 05/10 大金巧侑
-// カメラ内に入っているかを調べる
-// // 2021 05/10 大金巧侑
-// 初期値を設定
-// 2021 05/14 大金巧侑
-// カメラ内に入っているかを調べる更新
+// 2021 05/01 大金巧侑 カメラの移動処理を管理する
+// 2021 05/10 大金巧侑 カメラ内に入っているかを調べる
+// 2021 05/10 大金巧侑 初期値を設定
+// 2021 05/14 大金巧侑 カメラ内に入っているかを調べる更新
+// 2021/08/25 松中海斗 静止時にカメラを引く、移動時にカメラを近づけるように更新
 
 #include "CameraControl.h"
 #include "CameraSpline.h"
@@ -20,19 +17,24 @@ ACameraControl::ACameraControl() :
 	m_NowDistance(600.0f),
 	m_NowSpeed(8.0f),
 	m_Player(true),
+	m_CountTime(0.0f),
+	m_bCount(false),
 	m_pPlayerActor(NULL),
 	m_TargetPos(FVector::ZeroVector),
 	m_SpeedHight(5.0f),
 	m_SpeedWidth(3.0f),
-	m_SpeedScaleUp(3.0f),
-	m_SpeedScaleDown(2.0f),
+	m_ScaleUpTime(3.0f),
+	m_ScaleDownTime(2.0f),
 	m_Distance(600.0f),
 	m_Distance_ScaleUpMagnification(0.5f),
 	m_LenghWidth(220.0f),
 	m_LenghHight(100.0f),
 	m_MaxSpeed(14.0f),
 	m_Move(false),
-	m_Right(true)
+	m_PrevMove(false),
+	m_Right(true),
+	m_PrevChangeCameraPos(FVector::ZeroVector),
+	m_PrevCameraPos(FVector::ZeroVector)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -61,6 +63,8 @@ void ACameraControl::BeginPlay()
 
 	// カメラの初期位置を初期化
 	SetActorLocation(FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z));
+
+	m_PrevCameraPos, m_PrevChangeCameraPos = (GetActorLocation());
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -140,7 +144,7 @@ void ACameraControl::Tick(float DeltaTime)
 
 	if (m_Player)
 	{
-		MovePlayerCamera();
+		MovePlayerCamera(DeltaTime);
 	}
 	else
 	{
@@ -150,7 +154,7 @@ void ACameraControl::Tick(float DeltaTime)
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
 // カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
-void ACameraControl::MovePlayerCamera()
+void ACameraControl::MovePlayerCamera(float _deltaTime)
 {
 	if (m_pSpline.Num() == 0)return;
 
@@ -159,26 +163,64 @@ void ACameraControl::MovePlayerCamera()
 	// カメラとプレイヤーの相対距離
 	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
-	// カメラの移動を行うか判定する
+	// モードが切り替わったら初期化（松中）
+	if (m_PrevMove != m_Move)
+	{
+		m_PrevMove = m_Move;
+		m_CountTime = 0.0f;
+		m_PrevChangeCameraPos = GetActorLocation();
+	}
+
+	// 移動を行う場合
 	if (m_Move)
 	{
-		if (m_Right)
+		// 移動後の目標座標を設定（松中・変更）
+		FVector targetPos = m_TargetPos;
+		targetPos.X = (m_TargetPos.X + m_Distance) - (m_TargetPos.Z + m_Distance) * (m_Distance_ScaleUpMagnification - 1.0f);
+		targetPos.Z -= m_TargetPos.Z * (m_Distance_ScaleUpMagnification - 1.0f);
+
+		FVector move = FVector().ZeroVector;
+
+		// 奥行きの設定
+		FVector locationTmp = GetActorLocation();
+		locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
+		SetActorLocation(locationTmp);
+
+		// 横移動分を加算
+		targetPos += m_FrontPos;
+		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
+
+		if ((speed > 0.0f) && (speed > m_MaxSpeed))
 		{
-			if (relativeDistance > m_AdjustmentPos.Y)
-			{
-				m_Move = false;
-			}
+			speed = m_MaxSpeed;
 		}
-		else 
+		else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
 		{
-			if (relativeDistance < -m_AdjustmentPos.Y)
-			{
-				m_Move = false;
-			}
+			speed = -m_MaxSpeed;
 		}
+
+		move.Y = speed;
+
+		// 縦移動分を加算
+		move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
+
+		// 移動
+		SetActorLocation(GetActorLocation() + move);
+
+		// カメラの移動が止まったら移動フラグをオフ（松中）
+		if (m_PrevCameraPos == GetActorLocation()) m_Move = false;
+		m_PrevCameraPos = GetActorLocation();
 	}
-	else 
+	else
 	{
+		// 奥行きの設定（松中）
+		FVector locationTmp = GetActorLocation();
+		float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
+		locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
+		locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
+		SetActorLocation(locationTmp);
+
+		// カメラの移動を行うか判定する
 		if (FMath::Abs(relativeDistance) > m_LenghWidth)
 		{
 			if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
@@ -202,54 +244,8 @@ void ACameraControl::MovePlayerCamera()
 		}
 	}
 
-	// 移動を行う場合
-	if (m_Move)
-	{
-		// 移動後の目標座標を設定
-		FVector targetPos = FVector(m_TargetPos.X + m_Distance * m_Distance_ScaleUpMagnification, m_TargetPos.Y, m_TargetPos.Z * m_Distance_ScaleUpMagnification);
-
-		FVector move;
-
-		// 横移動分を加算
-		targetPos += m_FrontPos;
-		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
-
-		if ((speed > 0.0f) && (speed > m_MaxSpeed))
-		{
-			speed = m_MaxSpeed;
-		}
-		else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
-		{
-			speed = -m_MaxSpeed;
-		}
-
-		move += FVector(0.0f, speed, 0.0f);
-
-		// 縦移動分を加算
-		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
-
-		// 奥移動分を加算
-		move += FVector((targetPos.X - GetActorLocation().X) / m_SpeedScaleUp, 0.0f, 0.0f);
-
-		// 移動
-		SetActorLocation(GetActorLocation() + move);
-	}
-	else
-	{
-		// 移動後の目標座標を設定
-		FVector targetPos = FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z);
-
-		FVector move;
-
-		// 縦移動分を加算
-		move += FVector(0.0f, 0.0f, (targetPos.Z - GetActorLocation().Z) / m_SpeedHight);
-
-		// 奥移動分を加算
-		move += FVector((targetPos.X - GetActorLocation().X) / m_SpeedScaleUp, 0.0f, 0.0f);
-
-		// 移動
-		SetActorLocation(GetActorLocation() + move);
-	}
+	// 時間をカウント（松中）
+	m_CountTime += _deltaTime;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -263,6 +259,29 @@ void ACameraControl::MoveCamera()
 	FVector move = (targetPos - GetActorLocation()) / m_NowSpeed;
 
 	SetActorLocation(GetActorLocation() + move);
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+// 静止時、移動時のカメラの拡縮を行う--------------------------------------------------------------------------------------------------------------------------
+void ACameraControl::ChangeScaleCamera(float _deltaTime)
+{
+	if (m_Move != m_PrevMove)
+	{
+		m_CountTime = 0.0f;
+		m_PrevMove = m_Move;
+	}
+	float calcDistance = m_Distance - m_Distance * (m_Distance_ScaleUpMagnification - 1.0f);
+
+	if (m_Move)
+	{
+		m_Distance = FMath::Lerp(m_Distance, calcDistance, FMath::Clamp(m_CountTime / m_ScaleUpTime, 0.0f, 1.0f));
+	}
+	else
+	{
+		m_Distance = FMath::Lerp(calcDistance, m_Distance, FMath::Clamp(m_CountTime / m_ScaleDownTime, 0.0f, 1.0f));
+	}
+
+	m_CountTime += _deltaTime;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
