@@ -74,6 +74,10 @@ private:
 	// オーバーラップ関数
 	UFUNCTION() void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+public:
+	// 死亡処理
+	void Des();
 private:
 
 	// アニメーション変更処理

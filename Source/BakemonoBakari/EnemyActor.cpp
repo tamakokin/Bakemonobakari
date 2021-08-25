@@ -169,23 +169,7 @@ void AEnemyActor::EnemyDamage()
 
 	if (m_EnemyHP <= 0)
 	{
-		// 死亡アニメーション再生
-		m_EnemyState = ENEMY_STATE_DESTROY;
-		ChangeAnim();
-
-		// 行動不能にする
-		m_IsAction = false;
-
-		// プレイヤーの方向を向く
-		m_pEnemyRote->EnemyRote();
-
-		// スコアを加算する
-		Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
-		// 倒しきった音を出す
-		if (m_EnemyLethalDamageSound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyLethalDamageSound, GetActorLocation());
-		}
+		Des();
 	}
 	else
 	{
@@ -195,6 +179,31 @@ void AEnemyActor::EnemyDamage()
 			UGameplayStatics::PlaySoundAtLocation(this, m_EnemyDamageSound, GetActorLocation());
 		}
 	}
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// 死亡処理------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void AEnemyActor::Des() 
+{
+	// 死亡アニメーション再生
+	m_EnemyState = ENEMY_STATE_DESTROY;
+	ChangeAnim();
+
+	// 行動不能にする
+	m_IsAction = false;
+
+	// プレイヤーの方向を向く
+	m_pEnemyRote->EnemyRote();
+
+	// スコアを加算する
+	Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
+	// 倒しきった音を出す
+	if (m_EnemyLethalDamageSound != NULL)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, m_EnemyLethalDamageSound, GetActorLocation());
+	}
+
+	// 当たり判定の無効化
+	CollisionOff();
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
