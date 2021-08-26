@@ -19,7 +19,6 @@
 #define DAMAGE_ANIME_END 30
 #define FLASH_END 10
 #define FLASH_TIMING 5
-#define DAMAGE_END 60
 // Sets default values
 AEnemyActor::AEnemyActor()
 	: m_pEnemyMesh(NULL)
@@ -31,6 +30,7 @@ AEnemyActor::AEnemyActor()
 	, m_score(500.f)
 	, m_initEnemyPosition(FVector::ZeroVector)
 	, m_StartRote(FRotator::ZeroRotator)
+	, m_DamageEndTiming(100)
 {
 	// 毎フレーム、このクラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -245,7 +245,7 @@ void AEnemyActor::EnemyFlashing()
 		}
 
 		// 無敵時間の終了
-		if (m_EnemyDamageCount > DAMAGE_END)
+		if (m_EnemyDamageCount > m_DamageEndTiming)
 		{
 			m_EnemyDamageCount = 0;
 

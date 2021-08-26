@@ -158,6 +158,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USkeletalMeshComponent* m_pEnemyMesh;		// メッシュ
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int m_DamageEndTiming;						// ダメージによって無敵時間が終了するタイミング
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class USoundBase* m_EnemyDamageSound;		// 与ダメージ時の音
 
