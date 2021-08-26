@@ -15,6 +15,11 @@
 #include "Enemy_Rote_Component.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
+#define RAD_COLOR 0.3
+#define DAMAGE_ANIME_END 30
+#define FLASH_END 10
+#define FLASH_TIMING 5
+#define DAMAGE_END 60
 // Sets default values
 AEnemyActor::AEnemyActor()
 	: m_pEnemyMesh(NULL)
@@ -155,13 +160,10 @@ void AEnemyActor::EnemyDamage()
 	m_EnemyState = ENEMY_STATE_DAMAGE;
 
 	// 赤色にする
-	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.3f, 0.0f, 0.0f));
+	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(RAD_COLOR, 0.0f, 0.0f));
 
 	// ヒットエフェクトを出す
 	Hit();
-
-	// 当たり判定の無効化
-	CollisionOff();
 
 	// HPを減らす。ここはプレイヤーの攻撃値を参照するようにしてもいいかも
 	--m_EnemyHP;
@@ -194,6 +196,9 @@ void AEnemyActor::Des()
 	// プレイヤーの方向を向く
 	m_pEnemyRote->EnemyRote();
 
+	// 見えるようにする　
+	m_pEnemyMesh->SetVisibility(true);
+
 	// スコアを加算する
 	Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
 	// 倒しきった音を出す
@@ -214,22 +219,38 @@ void AEnemyActor::EnemyFlashing()
 	m_EnemyDamageCount++;
 
 	// 赤色をもとに戻す
-	if (m_EnemyDamageCount >= 10)
+	if (m_EnemyDamageCount >= FLASH_END)
 	{
 		// マテリアル側の「Opacity」パラメータに数値を設定する
 		m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
-		
 	}
 
-	// アニメーションの終了
-	if ((m_EnemyDamageCount >= 30)&&(m_EnemyState != ENEMY_STATE_DESTROY))
+	if (m_EnemyState != ENEMY_STATE_DESTROY)
 	{
-		m_EnemyState = ENEMY_STATE_IDLE;
-		m_IsAction = true;
+		// ダメージアニメーションを終了
+		if (m_EnemyDamageCount == DAMAGE_ANIME_END)
+		{
+			m_EnemyState = ENEMY_STATE_IDLE;
+			m_IsAction = true;
+		}
 
-		m_EnemyDamageCount = 0;
-		// コライダーを復帰
-		CollisionOn();
+		// 無敵時には点滅させる
+		if (m_EnemyDamageCount % (FLASH_TIMING *2) == 0)
+		{
+			m_pEnemyMesh->SetVisibility(false);
+		}
+		else if (m_EnemyDamageCount % FLASH_TIMING == 0)
+		{
+			m_pEnemyMesh->SetVisibility(true);
+		}
+
+		// 無敵時間の終了
+		if (m_EnemyDamageCount > DAMAGE_END)
+		{
+			m_EnemyDamageCount = 0;
+
+			m_pEnemyMesh->SetVisibility(true);
+		}
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
