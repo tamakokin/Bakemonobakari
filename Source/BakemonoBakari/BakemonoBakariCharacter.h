@@ -163,6 +163,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		int GetHP() { return m_info.hp; }
 
+	// 水平方向の入力値を保持 8/27
+	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
+		float GetHorizontal() { return m_Horizontal; }
+
 	//飛翔距離が伸びる関数 5/14
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void Hang();
@@ -197,4 +201,5 @@ private:
 	Player_Info m_info; //プレイヤー情報
 	FVector m_ReStartPos;	// プレイヤーのリスポーン座標
 
+	float m_Horizontal;	//水平方向の入力値保持
 };
