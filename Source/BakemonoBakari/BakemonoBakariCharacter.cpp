@@ -25,21 +25,22 @@
 #define PLAYER_WIDTH 42.f
 
 ABakemonoBakariCharacter::ABakemonoBakariCharacter()
-	: IsAttack(false)       //攻撃フラグ 4/23
-	, IsJump(false)         //ジャンプフラグ 4/23
-	, IsCrouch(false)       //しゃがみフラグ 4/23
-	, IsInputFadeIn(true)	//フェードイン時の入力不可フラグ 6/7
-	, IsDamage(false)       //ダメージフラグ 5/9
-	, IsFaceRight(true)     //右方向フラグ 5/10
-	, IsLadder(false)		//梯子フラグ 7/5伴野
-	, IsLadderClimb(false)	//梯子を登り切ったフラグ 7/8伴野
-	, LadderDir(ELadderDirection::LD_None)	//掴んでいる梯子の向き 7/5伴野
-	, IsHanging(false)      //飛翔距離伸びフラグ5/14
-	, IsInvincible(false)   //無敵時間フラグ5/19
-	, IsDead(false)			//死亡フラグ5/26
-	, IsFallDead(false)     //転落死亡フラグ 5/28
-	, IsEnemyContack(false)  //オブジェクトと接触しているフラグ 5/19
-	, EnemyLocation(0.0)    //敵の水平位置 5/19
+	: IsAttack(false)			// 攻撃フラグ 4/23
+	, IsJump(false)				// ジャンプフラグ 4/23
+	, IsCrouch(false)			// しゃがみフラグ 4/23
+	, IsInputFadeIn(true)		// フェードイン時の入力不可フラグ 6/7
+	, IsDamage(false)			// ダメージフラグ 5/9
+	, IsFaceRight(true)			// 右方向フラグ 5/10
+	, IsLadder(false)			// 梯子フラグ 7/5伴野
+	, IsLadderClimb(false)		// 梯子を登り切ったフラグ 7/8伴野
+	, LadderDir(ELadderDirection::LD_None)		// 掴んでいる梯子の向き 7/5伴野
+	, IsHanging(false)			// 飛翔距離伸びフラグ5/14
+	, IsInvincible(false)		// 無敵時間フラグ5/19
+	, IsDead(false)				// 死亡フラグ5/26
+	, IsFallDead(false)			// 転落死亡フラグ 5/28
+	, IsEnemyContack(false)		// オブジェクトと接触しているフラグ 5/19
+	, EnemyLocation(0.0)		// 敵の水平位置 5/19
+	, m_Horizontal(0.f)			// 水平方向の入力値保持
 {
 	//毎フレーム、クラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -161,6 +162,7 @@ void ABakemonoBakariCharacter::SetupPlayerInputComponent(class UInputComponent* 
 void ABakemonoBakariCharacter::InputRight(float Value)
 {
 	InputValue.X = Value;
+	m_Horizontal = Value;
 }
 
 // 上下入力の値を受け取って変数に保存する関数 7/5伴野
