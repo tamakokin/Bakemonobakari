@@ -13,6 +13,7 @@
 // 2021/07/08 更新者：伴野　梯子を登り切った際の処理を追加
 // 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
+// 2021/08/27 更新者：松中　ジャンプフラグを外部から取得できるように更新
 
 #pragma once
 
@@ -188,10 +189,8 @@ public:
 	UFUNCTION()
 		void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	///** Returns SideViewCameraComponent subobject **/
-	//FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
-	///** Returns CameraBoom subobject **/
-	//FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	// ジャンプしているかどうか(松中)
+	bool GetIsJump() { return IsJump; }
 
 private:
 	Player_Info m_info; //プレイヤー情報
