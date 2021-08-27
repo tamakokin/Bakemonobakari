@@ -1,11 +1,13 @@
-// 2021 05/01 大金巧侑
-// カメラの移動処理を管理する
+// 2021 05/01 大金巧侑 カメラの移動処理を管理する
+// 2021/08/25 松中海斗 静止時にカメラを引く、移動時にカメラを近づけるように更新
+// 2021/08/27 松中海斗 プレイヤーキャラクターの型を変更、スプラインに沿って移動するかどうかのフラグを追加
 
 // 76行目ににスクロールの止め方あり
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "BakemonoBakariCharacter.h"
 #include "CameraControl.generated.h"
 
 class ACameraSpline;
@@ -67,9 +69,6 @@ private:
 	// カメラを注目アクターに向けて移動させる(カメラの固定などに使用)
 	void MoveCamera();
 
-	// 静止時、移動時のカメラの拡縮を行う
-	void ChangeScaleCamera(float _deltaTime);
-
 	// 点Aと点Bの距離を計る
 	float Measurement(FVector _a, FVector _b);
 
@@ -78,32 +77,35 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		TArray<ACameraSpline*> m_pSpline;		// スプライン
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Position")
 		FVector m_AdjustmentPos;				// プレイヤーを追従する際に調整に使う
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(VisibleAnywhere, Category = "Camera|Position")
 		FVector m_TargetPos;					// 注目するアクターの座標
 		
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
 		float m_SpeedHight;						// カメラの縦の移動速度
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
 		float m_SpeedWidth;						// カメラの横の移動速度
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "10"))
-		float m_ScaleUpTime;					// カメラの拡大速度
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "10"))
-		float m_ScaleDownTime;					// カメラの縮小速度
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Scale", meta = (ClampMin = "0", ClampMax = "10"))
+		float m_ScaleUpTime;					// カメラの拡大速度（松中）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Scale", meta = (ClampMin = "0", ClampMax = "10"))
+		float m_ScaleDownTime;					// カメラの縮小速度（松中）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float m_Distance;						// カメラを配置する注目アクターからの奥行の距離
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (ClampMin = "0", ClampMax = "200"))
-		float m_Distance_ScaleUpMagnification;	// 移動時に拡大する倍率
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Scale", meta = (ClampMin = "0", ClampMax = "200"))
+		float m_Distance_ScaleUpMagnification;	// 移動時に拡大する倍率（松中）
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Length")
 		float m_LenghWidth;						// 現在の座標とプレイヤーとの距離が長いなら移動させる
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Length")
 		float m_LenghHight;						// 現在の座標とプレイヤーとの距離が長いなら移動させる
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
 		float m_MaxSpeed;						// カメラが移動できる範囲の最大値
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (DisplayPriority = "1"))
+		bool m_bSplineMode;						// スプラインに沿って移動するかどうか（松中）
 
 private:
 
@@ -123,7 +125,7 @@ private:
 	bool m_bCount;
 
 	// プレイヤーアクタ
-	AActor* m_pPlayerActor;
+	ABakemonoBakariCharacter* m_pPlayerActor;
 
 	// 移動するかどうか
 	bool m_Move;
@@ -136,4 +138,6 @@ private:
 	FVector m_PrevChangeCameraPos;
 	// ひとつ前のカメラの座標
 	FVector m_PrevCameraPos;
+	// 一つ前のジャンプフラグ
+	bool m_PrevIsJump;
 };
