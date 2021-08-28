@@ -19,6 +19,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "CameraControl.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #define PLAYER_HEIGHT 96.f
@@ -107,8 +108,6 @@ void ABakemonoBakariCharacter::BeginPlay()
 		if (actors[i]->ActorHasTag("Camera"))
 		{
 			m_pCamera = StaticCast<ACameraControl*>(actors[i]);
-			UE_LOG(LogTemp, Warning, TEXT("D"));
-
 			break;
 		}
 	}
@@ -463,9 +462,7 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		}
 		else if(OtherActor->ActorHasTag("Ground"))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("C"));
-
-			if(m_pCamera)
+			if((m_pCamera)&&(OtherActor->GetActorLocation().Z < GetActorLocation().Z))
 			m_pCamera->SearchSpline();
 		}
 

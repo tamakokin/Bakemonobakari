@@ -19,9 +19,10 @@
 #include "CoreMinimal.h"
 #include "Engine.h"
 #include "GameFramework/Character.h"
-#include "CameraControl.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "BakemonoBakariCharacter.generated.h"
+
+class ACameraControl;
 
 //近くにある梯子の向き 7/5伴野
 UENUM(BlueprintType)
@@ -152,6 +153,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Overlap")
 		class UCapsuleComponent* OverlapComponent;
 
+	// カメラ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	ACameraControl* m_pCamera;				
+
 public:
 	ABakemonoBakariCharacter();
 
@@ -200,7 +205,6 @@ public:
 private:
 	Player_Info m_info;						//プレイヤー情報
 	FVector m_ReStartPos;					// プレイヤーのリスポーン座標
-	ACameraControl* m_pCamera;				// カメラ
 	USkeletalMeshComponent* m_pMesh;		// メッシュ
 	float m_Horizontal;						//水平方向の入力値保持
 };

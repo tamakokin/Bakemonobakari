@@ -89,6 +89,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Camera|Position")
 		FVector m_TargetPos;					// 注目するアクターの座標
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Position")
+		FVector m_CameraMoveReturn;				// カメラを移動する際の限界値
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
 		float m_SpeedHight;						// カメラの縦の移動速度
@@ -111,6 +114,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
 		float m_MaxSpeed;						// カメラが移動できる範囲の最大値
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
+		float  m_SwayingMax;					// プレイヤーが地面に当たった時に揺らす初期値
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera|Speed")
+		float  m_SwayingAdd;					// プレイヤーが地面に当たった時に揺らす現在の揺れの増幅量
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (DisplayPriority = "1"))
 		bool m_bSplineMode;						// スプラインに沿って移動するかどうか（松中）
 
@@ -121,6 +129,11 @@ private:
 	// 移動目標にする座標
 	float m_NowDistance;						// 現在カメラを配置する注目アクターからの奥行の距離
 	float m_NowSpeed;							// カメラの現在の移動速度
+
+	// プレイヤーが地面に当たった時に揺らす現在の揺れの総量
+	float  m_SwayingNow;
+	// プレイヤーが地面に当たった時に揺れを起こすかどうか
+	bool m_IsSway;
 
 	// プレイヤーの前方にカメラを移動させる
 	FVector m_FrontPos;

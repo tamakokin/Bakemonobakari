@@ -140,27 +140,11 @@ void ACameraControl::SearchSpline()
 				}
 			}
 		}
-
-
-		//// 誤差許容範囲
-		//float errorValue = 10.0f;
-
-		//// 二つのスプラインの間にプレイヤーがいるかを調べる
-		//if ((playerPos.Y >= tempPoses[0].Y - errorValue) && (playerPos.Y <= tempPoses[0].Y + errorValue))
-		//{
-		//	if ((playerPos.Y >= tempPoses[1].Y - errorValue) && (playerPos.Y <= tempPoses[1].Y + errorValue))
-		//	{
-		//		if (((tempPoses[0].Z < playerPos.Z) && (tempPoses[1].Z > playerPos.Z)) || ((tempPoses[0].Z > playerPos.Z) && (tempPoses[1].Z < playerPos.Z)))
-		//		{
-		//			m_TargetPos.Z = playerPos.Z;
-		//		}
-		//	}
-		//}
-		//if ((playerPos.Y < tempPoses[0].Y - errorValue) || (playerPos.Y > tempPoses[0].Y + errorValue))
-		//{
-		//	m_TargetPos.Y = playerPos.Y;
-		//}
 	}
+
+	// 地面に当たった時カメラを揺らす
+	m_SwayingNow = -m_SwayingMax;
+	m_IsSway = true;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 // 更新処理//-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,17 +160,27 @@ void ACameraControl::Tick(float DeltaTime)
 	{
 		MoveCamera();
 	}
+
+	// カメラが地面に当たった時の揺れ
+	if ((m_SwayingNow > m_SwayingMax) && (m_IsSway))
+	{
+		m_SwayingNow = 0.0f;
+		m_IsSway = false;
+	}
+	else if(m_IsSway)
+	{
+		m_SwayingNow += m_SwayingAdd;
+	}
+
+	SetActorLocation(GetActorLocation() + FVector(0.0f,0.0f, m_SwayingNow));
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
 // カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::MovePlayerCamera(float _deltaTime)
 {
-	//SearchSpline();
 	if (m_pSpline[0])
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AAAAAA"));
-
 		m_TargetPos = m_pSpline[0]->GetTargetPos();
 	}
 	// カメラとプレイヤーの相対距離
@@ -246,8 +240,11 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 	// 縦移動分を加算
 	move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
 
-	// コントローラーからの入力を加算
+	// コントローラーからの入力によってカメラを移動
 	move += m_MoveCamera;
+
+	// カメラをもとの座標に戻す
+	m_MoveCamera -= FVector(0.0f, m_MoveCamera.Y / m_CameraMoveReturn.Y, m_MoveCamera.Z / m_CameraMoveReturn.Z);
 
 	// 移動
 	SetActorLocation(GetActorLocation() + move);
