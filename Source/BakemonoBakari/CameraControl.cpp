@@ -63,8 +63,9 @@ void ACameraControl::BeginPlay()
 
 	SearchSpline();
 
+
 	// カメラの初期位置を初期化
-	SetActorLocation(FVector(m_TargetPos.X + m_Distance, m_TargetPos.Y, m_TargetPos.Z));
+	SetActorLocation(FVector(m_pPlayerActor->GetActorLocation().X + m_Distance, m_pPlayerActor->GetActorLocation().Y, m_pPlayerActor->GetActorLocation().Z));
 
 	m_PrevCameraPos, m_PrevChangeCameraPos = (GetActorLocation());
 }
@@ -98,54 +99,67 @@ void ACameraControl::Search()
 // スプラインを検索する-----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::SearchSpline()
 {
-	if (m_bSplineMode)
+	if (m_pSpline.Num() > 0)
 	{
-		if (m_pSpline.Num() > 0)
+		// マップ内のスプラインを取得
+		TArray<FVector> tempPoses;
+		TArray<float> tempLengthes;
+
+		FVector playerPos = m_pPlayerActor->GetActorLocation();
+
+		for (int n = 0; n < m_pSpline.Num(); ++n)
 		{
-			// マップ内のスプラインを取得
-			TArray<FVector> tempPoses;
-			TArray<float> tempLengthes;
+			FVector tempPos = m_pSpline[n]->GetTargetPos();
+			float y = playerPos.Y - tempPos.Y;
+			float z = playerPos.Z - tempPos.Z;
 
-			FVector playerPos = m_pSpline[0]->GetPlayerPos();
+			float length = FMath::Sqrt(y * y + z * z);
 
-			for (int n = 0; n < m_pSpline.Num(); ++n)
+			tempPoses.Add(tempPos);
+			tempLengthes.Add(length);
+		}
+
+		// バブルソートで一番近いスプラインの座標を取得
+		for (int n = 0; n < tempPoses.Num(); ++n)
+		{
+			for (int i = tempPoses.Num() - 1; i > n; --i)
 			{
-				FVector tempPos = m_pSpline[n]->GetTargetPos();
-				float y = playerPos.Y - tempPos.Y;
-				float z = playerPos.Z - tempPos.Z;
-
-				float length = FMath::Sqrt(y * y + z * z);
-
-				tempPoses.Add(tempPos);
-				tempLengthes.Add(length);
-			}
-
-			// バブルソートで一番近いスプラインの座標を取得
-			for (int n = 0; n < tempPoses.Num(); ++n)
-			{
-				for (int i = tempPoses.Num() - 1; i > n; --i)
+				if (tempLengthes[i] < tempLengthes[i - 1])
 				{
-					if (tempLengthes[i] < tempLengthes[i - 1])
-					{
-						float temp = tempLengthes[i];
-						FVector tempPos = tempPoses[i];
+					float temp = tempLengthes[i];
+					FVector tempPos = tempPoses[i];
+					ACameraSpline* tempSpline = m_pSpline[i];
 
-						tempLengthes[i] = tempLengthes[i - 1];
-						tempPoses[i] = tempPoses[i - 1];
+					tempLengthes[i] = tempLengthes[i - 1];
+					tempPoses[i] = tempPoses[i - 1];
+					m_pSpline[i] = m_pSpline[i - 1];
 
-						tempLengthes[i - 1] = temp;
-						tempPoses[i - 1] = tempPos;
-					}
+					tempLengthes[i - 1] = temp;
+					tempPoses[i - 1] = tempPos;
+					m_pSpline[i-1] = tempSpline;
 				}
 			}
-			m_TargetPos = tempPoses[0];
 		}
-	}
-	else
-	{
-		// スプラインモードではない場合プレイヤーにカメラのターゲットを合わせる(松中)
-		if (m_pPlayerActor != NULL)
-			m_TargetPos = m_pPlayerActor->GetActorLocation();
+
+
+		//// 誤差許容範囲
+		//float errorValue = 10.0f;
+
+		//// 二つのスプラインの間にプレイヤーがいるかを調べる
+		//if ((playerPos.Y >= tempPoses[0].Y - errorValue) && (playerPos.Y <= tempPoses[0].Y + errorValue))
+		//{
+		//	if ((playerPos.Y >= tempPoses[1].Y - errorValue) && (playerPos.Y <= tempPoses[1].Y + errorValue))
+		//	{
+		//		if (((tempPoses[0].Z < playerPos.Z) && (tempPoses[1].Z > playerPos.Z)) || ((tempPoses[0].Z > playerPos.Z) && (tempPoses[1].Z < playerPos.Z)))
+		//		{
+		//			m_TargetPos.Z = playerPos.Z;
+		//		}
+		//	}
+		//}
+		//if ((playerPos.Y < tempPoses[0].Y - errorValue) || (playerPos.Y > tempPoses[0].Y + errorValue))
+		//{
+		//	m_TargetPos.Y = playerPos.Y;
+		//}
 	}
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,48 +182,28 @@ void ACameraControl::Tick(float DeltaTime)
 // カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::MovePlayerCamera(float _deltaTime)
 {
-	SearchSpline();
+	//SearchSpline();
+	if (m_pSpline[0])
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AAAAAA"));
 
+		m_TargetPos = m_pSpline[0]->GetTargetPos();
+	}
 	// カメラとプレイヤーの相対距離
 	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
-	// モードが切り替わったら初期化（松中）
-	if (m_PrevMove != m_Move || m_PrevIsJump != m_pPlayerActor->GetIsJump())
-	{
-		m_PrevMove = m_Move;
-		m_PrevIsJump = m_pPlayerActor->GetIsJump();
-		m_CountTime = 0.0f;
-		m_PrevChangeCameraPos = GetActorLocation();
-	}
 
-	// 移動を行う場合
+	// 移動後の目標座標を設定（松中・変更）
+	FVector targetPos = m_TargetPos;
+	targetPos.X = (m_TargetPos.X + m_Distance);
+
+	FVector move = FVector().ZeroVector;
+
+	// 横移動を行う場合
 	if (m_Move)
-	{
-		// 移動後の目標座標を設定（松中・変更）
-		FVector targetPos = m_TargetPos;
-		targetPos.X = (m_TargetPos.X + m_Distance) - (m_TargetPos.Z + m_Distance) * (m_Distance_ScaleUpMagnification - 1.0f);
-		targetPos.Z -= m_TargetPos.Z * (m_Distance_ScaleUpMagnification - 1.0f);
-
-		FVector move = FVector().ZeroVector;
-
-		// 奥行きの設定
-		if (m_pPlayerActor->GetIsJump())
-		{
-			FVector locationTmp = GetActorLocation();
-			float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
-			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
-			locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
-			SetActorLocation(locationTmp);
-		}
-		else
-		{
-			FVector locationTmp = GetActorLocation();
-			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
-			SetActorLocation(locationTmp);
-		}
-
-		// 横移動分を加算
+	{	// 横移動分を加算
 		targetPos += m_FrontPos;
+
 		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
 
 		if ((speed > 0.0f) && (speed > m_MaxSpeed))
@@ -222,28 +216,9 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 		}
 
 		move.Y = speed;
-
-		// 縦移動分を加算
-		move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
-
-		// 移動
-		SetActorLocation(GetActorLocation() + move);
-
-		// カメラの移動が止まったら移動フラグをオフ（松中）
-		if (m_PrevCameraPos == GetActorLocation()) m_Move = false;
-
-		m_PrevCameraPos = GetActorLocation();
-		m_PrevIsJump = m_pPlayerActor->GetIsJump();
 	}
 	else
 	{
-		// 奥行きの設定（松中）
-		FVector locationTmp = GetActorLocation();
-		float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
-		locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
-		locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
-		SetActorLocation(locationTmp);
-
 		// カメラの移動を行うか判定する
 		if (FMath::Abs(relativeDistance) > m_LenghWidth)
 		{
@@ -268,7 +243,15 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), m_CountTime);
+	// 縦移動分を加算
+	move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
+
+	// コントローラーからの入力を加算
+	move += m_MoveCamera;
+
+	// 移動
+	SetActorLocation(GetActorLocation() + move);
+
 	// 時間をカウント（松中）
 	m_CountTime += _deltaTime;
 }

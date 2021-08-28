@@ -14,12 +14,13 @@
 // 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 // 2021/08/27 更新者：松中　ジャンプフラグを外部から取得できるように更新
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Engine.h"
 #include "GameFramework/Character.h"
+#include "CameraControl.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "BakemonoBakariCharacter.generated.h"
 
 //近くにある梯子の向き 7/5伴野
@@ -197,8 +198,9 @@ public:
 	bool GetIsJump() { return IsJump; }
 
 private:
-	Player_Info m_info; //プレイヤー情報
-	FVector m_ReStartPos;	// プレイヤーのリスポーン座標
-
-	float m_Horizontal;	//水平方向の入力値保持
+	Player_Info m_info;						//プレイヤー情報
+	FVector m_ReStartPos;					// プレイヤーのリスポーン座標
+	ACameraControl* m_pCamera;				// カメラ
+	USkeletalMeshComponent* m_pMesh;		// メッシュ
+	float m_Horizontal;						//水平方向の入力値保持
 };

@@ -1,6 +1,7 @@
 // 2021 05/01 大金巧侑 カメラの移動処理を管理する
 // 2021/08/25 松中海斗 静止時にカメラを引く、移動時にカメラを近づけるように更新
 // 2021/08/27 松中海斗 プレイヤーキャラクターの型を変更、スプラインに沿って移動するかどうかのフラグを追加
+// 2021/08/28 コントローラーからの入力でカメラを移動できるようにする
 
 // 76行目ににスクロールの止め方あり
 #pragma once
@@ -11,7 +12,7 @@
 #include "CameraControl.generated.h"
 
 class ACameraSpline;
-
+class ABakemonoBakariCharacter;
 UCLASS()
 class BAKEMONOBAKARI_API ACameraControl : public AActor
 {
@@ -56,12 +57,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera Function")
 		bool CheckInCamera(FVector _pos, FVector _size = FVector::ZeroVector);
 
-private:
-	// プレイヤーを検索する
-	void Search();
+	UFUNCTION(BlueprintCallable, Category = "Camera Function")
+		void SetMoveCameraY(float _move) { m_MoveCamera.Y += _move; }
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Function")
+		void SetMoveCameraZ(float _move) { m_MoveCamera.Z += _move; }
 
 	// スプラインを探索
 	void SearchSpline();
+
+private:
+	// プレイヤーを検索する
+	void Search();
 
 	// カメラをプレイヤーに追従させる
 	void MovePlayerCamera(float _deltaTime);
@@ -117,17 +124,18 @@ private:
 
 	// プレイヤーの前方にカメラを移動させる
 	FVector m_FrontPos;
+
+	// 入力によってカメラを移動させる
+	FVector m_MoveCamera;
+
+	ABakemonoBakariCharacter* m_pPlayerActor;
+
 	// プレイヤーの追従を行うかどうか
 	bool m_Player;
 
 	// 時間をカウント
 	float m_CountTime;
 	bool m_bCount;
-
-	// プレイヤーアクタ
-	ABakemonoBakariCharacter* m_pPlayerActor;
-
-	// 移動するかどうか
 	bool m_Move;
 	bool m_PrevMove;
 

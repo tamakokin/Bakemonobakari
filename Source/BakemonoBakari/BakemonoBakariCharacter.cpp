@@ -85,8 +85,9 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	OverlapComponent->InitCapsuleSize(42.f, 96.0f);
 	OverlapComponent->SetupAttachment(RootComponent);
 
-	OverlapComponent->OnComponentBeginOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapBegin);
-	OverlapComponent->OnComponentEndOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapEnd);
+	m_pMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+	m_pMesh->OnComponentBeginOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapBegin);
+	m_pMesh->OnComponentEndOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapEnd);
 	
 }
 
@@ -94,6 +95,23 @@ void ABakemonoBakariCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	m_ReStartPos = GetActorLocation();
+
+	// ƒJƒƒ‰‚ğ’Tõ‚·‚é
+	TSubclassOf<AActor>findClass;
+	findClass = AActor::StaticClass();
+	TArray<AActor*>actors;
+	UGameplayStatics::GetAllActorsOfClass(this->GetWorld(), findClass, actors);
+
+	for (int i = 0; i < actors.Num(); i++)
+	{
+		if (actors[i]->ActorHasTag("Camera"))
+		{
+			m_pCamera = StaticCast<ACameraControl*>(actors[i]);
+			UE_LOG(LogTemp, Warning, TEXT("D"));
+
+			break;
+		}
+	}
 
 }
 
@@ -442,6 +460,13 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 			m_ReStartPos = GetActorLocation();
 
 			UE_LOG(LogTemp, Warning, TEXT("HIT"));
+		}
+		else if(OtherActor->ActorHasTag("Ground"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("C"));
+
+			if(m_pCamera)
+			m_pCamera->SearchSpline();
 		}
 
 		if (GEngine)
