@@ -289,20 +289,25 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 		targetPos.Z -= m_TargetPos.Z * (m_Distance_ScaleUpMagnification - 1.0f);
 
 		// ‰œs‚«‚ÌÝ’è
-		if (m_pPlayerActor->GetIsJump())
-		{
-			FVector locationTmp = GetActorLocation();
-			float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
-			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
-			locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
-			SetActorLocation(locationTmp);
-		}
-		else
-		{
-			FVector locationTmp = GetActorLocation();
-			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
-			SetActorLocation(locationTmp);
-		}
+		//if (m_pPlayerActor->GetIsJump())
+		//{
+		//	FVector locationTmp = GetActorLocation();
+		//	float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
+		//	locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
+		//	locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
+		//	SetActorLocation(locationTmp);
+		//}
+		//else
+		//{
+		//	FVector locationTmp = GetActorLocation();
+		//	locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
+		//	SetActorLocation(locationTmp);
+		//}
+
+
+		FVector locationTmp = GetActorLocation();
+		locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
+		SetActorLocation(locationTmp);
 
 		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
 
