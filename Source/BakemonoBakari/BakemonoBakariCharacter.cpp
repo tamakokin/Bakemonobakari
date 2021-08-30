@@ -89,7 +89,7 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	m_pMesh = Cast<USkeletalMeshComponent>(GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 	m_pMesh->OnComponentBeginOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapBegin);
 	m_pMesh->OnComponentEndOverlap.AddDynamic(this, &ABakemonoBakariCharacter::OnOverlapEnd);
-	
+
 }
 
 void ABakemonoBakariCharacter::BeginPlay()
@@ -135,10 +135,10 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 	//転落死亡の処理 5/28
 	if (IsFallDead == true)
 	{
-	TakeDamage(100.0);			//ダメージ計算
-	//IsDamage = true;			//ダメージ受けている
-	GetCharacterMovement()->GravityScale = 0.0f;
-	GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
+		TakeDamage(100.0);			//ダメージ計算
+		//IsDamage = true;			//ダメージ受けている
+		GetCharacterMovement()->GravityScale = 0.0f;
+		GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
 	}
 	//Overlapしている時ダメージを受ける処理 5/20
 	else if (IsEnemyContack == true && IsInvincible == false && IsDead == false)
@@ -155,6 +155,9 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 	}
 
 	SetActorLocation(FVector(0.0f, GetActorLocation().Y, GetActorLocation().Z));
+
+	// ライントレースを用いて下のアクターを調べる
+	CheckLine();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -242,7 +245,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
 				SetActorRotation(FRotator(0.f, -90.f, 0.f));
 				// add movement in that direction
-				AddMovementInput(FVector(0.f, -1.f, 0.f), Value+1.5f);
+				AddMovementInput(FVector(0.f, -1.f, 0.f), Value + 1.5f);
 				IsFaceRight = true;
 			}
 			else
@@ -252,7 +255,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
 					SetActorRotation(FRotator(0.f, 90.f, 0.f));
 					// add movement in that direction
-					AddMovementInput(FVector(0.f, -1.f, 0.f), Value-1.5f);
+					AddMovementInput(FVector(0.f, -1.f, 0.f), Value - 1.5f);
 					IsFaceRight = false;
 				}
 			}
@@ -302,11 +305,11 @@ void ABakemonoBakariCharacter::MoveUp(float Value)
 			}
 			else
 			{
-				GetCharacterMovement()->Velocity = FVector(0.f,0.f,0.f);
+				GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
 			}
 		}
 	}
-	
+
 }
 
 //void ABakemonoBakariCharacter::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)
@@ -331,7 +334,7 @@ void ABakemonoBakariCharacter::Hang()
 	{
 		GetCharacterMovement()->GravityScale = 4.0f;
 	}
-	
+
 }
 
 //攻撃入力関数 4/23
@@ -376,7 +379,7 @@ void ABakemonoBakariCharacter::KnockBack(float _enemylocation)
 
 	//プレイヤーに敵の位置によってノックバックフォースを与える
 	if (_enemylocation <= UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation().Y)
-	{		
+	{
 		LaunchCharacter(FVector(0.0f, 800.f, 800.f), false, false);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "KnockBackToleft");
 	}
@@ -395,10 +398,14 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		//Overlapするオブジェクトは敵の場合
 		if (OtherActor->ActorHasTag("Enemy"))
 		{
-			IsEnemyContack = true;								//Overlapしている
-			EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
+			// デバッグモードならダメージを受けない
+			if (!IsDebug) 
+			{
+				IsEnemyContack = true;								//Overlapしている
+				EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
 
-			LeaveLadder();		// 梯子から手を放す
+				LeaveLadder();		// 梯子から手を放す
+			}
 		}
 		//Overlapするオブジェクトは回復アイテムの場合
 		else if (OtherActor->ActorHasTag("Recovery"))
@@ -430,7 +437,7 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 					// 梯子を登り切った
 					IsLadderClimb = true;
-					
+
 					// 梯子から離れる
 					LeaveLadder();
 				}
@@ -460,10 +467,17 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 			UE_LOG(LogTemp, Warning, TEXT("HIT"));
 		}
-		else if(OtherActor->ActorHasTag("Ground"))
+		else if (OtherActor->ActorHasTag("Ground"))
 		{
-			if((m_pCamera)&&(OtherActor->GetActorLocation().Z < GetActorLocation().Z))
-			m_pCamera->SearchSpline();
+			if ((m_pCamera) && (OtherActor->GetActorLocation().Z < GetActorLocation().Z))
+			{
+				m_pCamera->SearchSpline();
+				if (!m_IsGround)
+				{
+					m_IsGround = true;
+					m_pCamera->Swaying();
+				}
+			}
 		}
 
 		if (GEngine)
@@ -502,7 +516,7 @@ void ABakemonoBakariCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 void ABakemonoBakariCharacter::ClimbLadder(float DeltaTime)
 {
 	// 移動先を決める
-	FVector actorMoveEndPoint = FVector(0.f, PLAYER_WIDTH*2, PLAYER_HEIGHT*2);
+	FVector actorMoveEndPoint = FVector(0.f, PLAYER_WIDTH * 2, PLAYER_HEIGHT * 2);
 	if (LadderDir == ELadderDirection::LD_Right)
 	{
 		actorMoveEndPoint.Y *= -1.f;
@@ -518,7 +532,7 @@ void ABakemonoBakariCharacter::ReStart()
 	m_info.hp = 100.0;
 
 	IsDamage = false;			// ダメージ受けていない状態に
-	IsDead = false;			// 死亡時から復活
+	IsDead = false;				// 死亡時から復活
 	IsFallDead = false;
 	IsInvincible = false;		// 無敵時間の終了
 	IsEnemyContack = false;
@@ -541,3 +555,44 @@ void ABakemonoBakariCharacter::LeaveLadder()
 	IsLadder = false;											// 梯子を掴んでいない
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);		// 重力の影響を元に戻す
 }
+
+
+// ライントレースを利用して前方あるアクターを判別して行動パターンを変える--------------------------------------------------------------------------------------------
+void ABakemonoBakariCharacter::CheckLine()
+{
+	// ライントレースの開始地点と、終点を設定
+	FVector start = GetActorLocation();
+	FVector end = start;
+	FVector cenetr;
+	FVector meshSize;
+	GetActorBounds(true, cenetr, meshSize);
+
+	end.Z -= meshSize.Z;
+
+	// 自分はあたらないようにする
+	FCollisionQueryParams collisionParmas;
+	collisionParmas.AddIgnoredActor(this);
+
+	// 当たった対象を調べる
+	TArray<FHitResult> outHit;
+
+	bool isGround = false;
+
+	bool isHit = GetWorld()->LineTraceMultiByChannel(outHit, start, end, ECC_WorldStatic, collisionParmas);
+	for (int n = 0; n < outHit.Num(); ++n)
+	{
+		// 当たっていないなら返す
+		if (!isHit)return;
+
+		if (outHit[n].GetComponent() == nullptr)return;
+
+		if (outHit[n].GetComponent()->ComponentHasTag("Ground"))
+		{
+			isGround = true;
+		}
+	}
+
+	if(!isGround)
+	m_IsGround = false;
+}
+// --------------------------------------------------------------------------------------------------------------------------------------------------

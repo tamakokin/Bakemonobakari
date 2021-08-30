@@ -66,6 +66,9 @@ public:
 	// スプラインを探索
 	void SearchSpline();
 
+	// 着地時に揺らす
+	void Swaying();
+
 private:
 	// プレイヤーを検索する
 	void Search();

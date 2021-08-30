@@ -94,6 +94,10 @@ protected:
 	// 復帰処理
 	UFUNCTION(BlueprintCallable, Category = "MyFunctions")
 		void ReStart();
+public:
+	// デバッグモードかのフラグ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+		bool IsDebug;
 
 	//攻撃しているかフラグ 4/23
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
@@ -203,8 +207,12 @@ public:
 	bool GetIsJump() { return IsJump; }
 
 private:
+	void CheckLine();											// ライントレースを用いて足元に地面があるか調べる
+
+private:
 	Player_Info m_info;						//プレイヤー情報
 	FVector m_ReStartPos;					// プレイヤーのリスポーン座標
 	USkeletalMeshComponent* m_pMesh;		// メッシュ
 	float m_Horizontal;						//水平方向の入力値保持
+	bool m_IsGround;						// 接地しているかどうか
 };
