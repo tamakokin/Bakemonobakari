@@ -285,7 +285,7 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 	{
 		// 移動後の目標座標を設定（松中・変更）
 		FVector targetPos = m_TargetPos;
-		targetPos.X = (m_TargetPos.X + m_Distance) - (m_TargetPos.Z + m_Distance) * (m_Distance_ScaleUpMagnification - 1.0f);
+		targetPos.X = (m_TargetPos.X + m_Distance) - (m_TargetPos.X + m_Distance) * (m_Distance_ScaleUpMagnification - 1.0f);
 		targetPos.Z -= m_TargetPos.Z * (m_Distance_ScaleUpMagnification - 1.0f);
 
 		// 奥行きの設定
