@@ -136,10 +136,11 @@ void ACameraControl::SearchSpline()
 
 					tempLengthes[i - 1] = temp;
 					tempPoses[i - 1] = tempPos;
-					m_pSpline[i-1] = tempSpline;
+					m_pSpline[i - 1] = tempSpline;
 				}
 			}
 		}
+		//m_TargetPos = tempPoses[0];
 	}
 
 	// 地面に当たった時カメラを揺らす
@@ -167,18 +168,93 @@ void ACameraControl::Tick(float DeltaTime)
 		m_SwayingNow = 0.0f;
 		m_IsSway = false;
 	}
-	else if(m_IsSway)
+	else if (m_IsSway)
 	{
 		m_SwayingNow += m_SwayingAdd;
 	}
 
-	SetActorLocation(GetActorLocation() + FVector(0.0f,0.0f, m_SwayingNow));
+	SetActorLocation(GetActorLocation() + FVector(0.0f, 0.0f, m_SwayingNow));
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------
 
 // カメラのプレイヤー追従の移動を行う -----------------------------------------------------------------------------------------------------------------------------------------------
 void ACameraControl::MovePlayerCamera(float _deltaTime)
 {
+	/*	if (m_pSpline[0])
+		{
+			m_TargetPos = m_pSpline[0]->GetTargetPos();
+		}*/
+	//	// カメラとプレイヤーの相対距離
+	//	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
+	//
+	//
+	//	// 移動後の目標座標を設定（松中・変更）
+	//	FVector targetPos = m_TargetPos;
+	//	targetPos.X = (m_TargetPos.X + m_Distance);
+	//
+	//	FVector move = FVector().ZeroVector;
+	//
+	//	// 横移動を行う場合
+	//	if (m_Move)
+	//	{	// 横移動分を加算
+	//		targetPos += m_FrontPos;
+	//
+	//		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
+	//
+	//		if ((speed > 0.0f) && (speed > m_MaxSpeed))
+	//		{
+	//			speed = m_MaxSpeed;
+	//		}
+	//		else if ((speed < 0.0f) && (speed < -m_MaxSpeed))
+	//		{
+	//			speed = -m_MaxSpeed;
+	//		}
+	//
+	//		move.Y = speed;
+	//	}
+	//	else
+	//	{
+	//		// カメラの移動を行うか判定する
+	//		if (FMath::Abs(relativeDistance) > m_LenghWidth)
+	//		{
+	//			if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
+	//			{
+	//				m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+	//
+	//				m_Right = false;
+	//
+	//				m_Move = true;
+	//
+	//			}
+	//			else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
+	//			{
+	//				m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
+	//
+	//				m_Right = true;
+	//
+	//				m_Move = true;
+	//
+	//			}
+	//		}
+	//	}
+	//
+	//	// 縦移動分を加算
+	//	move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
+	//
+	//	// コントローラーからの入力によってカメラを移動
+	//	move += m_MoveCamera;
+	//
+	//	// カメラをもとの座標に戻す
+	//	m_MoveCamera -= FVector(0.0f, m_MoveCamera.Y / m_CameraMoveReturn.Y, m_MoveCamera.Z / m_CameraMoveReturn.Z);
+	//
+	//	// 移動
+	//	SetActorLocation(GetActorLocation() + move);
+	//
+	//	// 時間をカウント（松中）
+	//	m_CountTime += _deltaTime;
+
+	//SearchSpline();
+
 	if (m_pSpline[0])
 	{
 		m_TargetPos = m_pSpline[0]->GetTargetPos();
@@ -186,17 +262,40 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 	// カメラとプレイヤーの相対距離
 	float relativeDistance = m_TargetPos.Y - GetActorLocation().Y;
 
-
-	// 移動後の目標座標を設定（松中・変更）
-	FVector targetPos = m_TargetPos;
-	targetPos.X = (m_TargetPos.X + m_Distance);
+	// モードが切り替わったら初期化（松中）
+	if (m_PrevMove != m_Move || m_PrevIsJump != m_pPlayerActor->GetIsJump())
+	{
+		m_PrevMove = m_Move;
+		m_PrevIsJump = m_pPlayerActor->GetIsJump();
+		m_CountTime = 0.0f;
+		m_PrevChangeCameraPos = GetActorLocation();
+	}
 
 	FVector move = FVector().ZeroVector;
 
-	// 横移動を行う場合
+	// 移動を行う場合
 	if (m_Move)
-	{	// 横移動分を加算
-		targetPos += m_FrontPos;
+	{
+		// 移動後の目標座標を設定（松中・変更）
+		FVector targetPos = m_TargetPos;
+		targetPos.X = (m_TargetPos.X + m_Distance) - (m_TargetPos.Z + m_Distance) * (m_Distance_ScaleUpMagnification - 1.0f);
+		targetPos.Z -= m_TargetPos.Z * (m_Distance_ScaleUpMagnification - 1.0f);
+
+		// 奥行きの設定
+		if (m_pPlayerActor->GetIsJump())
+		{
+			FVector locationTmp = GetActorLocation();
+			float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
+			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
+			locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
+			SetActorLocation(locationTmp);
+		}
+		else
+		{
+			FVector locationTmp = GetActorLocation();
+			locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, targetPos.X, FMath::Clamp((m_CountTime / m_ScaleUpTime), 0.0f, 1.0f));
+			SetActorLocation(locationTmp);
+		}
 
 		float speed = (targetPos.Y - GetActorLocation().Y) / m_NowSpeed;
 
@@ -210,45 +309,46 @@ void ACameraControl::MovePlayerCamera(float _deltaTime)
 		}
 
 		move.Y = speed;
+
+		// 縦移動分を加算
+		move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
+
+		// 移動
+		SetActorLocation(GetActorLocation() + move);
+
+		// カメラの移動が止まったら移動フラグをオフ（松中）
+		if (m_PrevCameraPos == GetActorLocation()) m_Move = false;
+
+		m_PrevCameraPos = GetActorLocation();
+		m_PrevIsJump = m_pPlayerActor->GetIsJump();
 	}
 	else
 	{
+		// 奥行きの設定（松中）
+		FVector locationTmp = GetActorLocation();
+		float alpha = FMath::Clamp((m_CountTime / m_ScaleDownTime), 0.0f, 1.0f);
+		locationTmp.X = FMath::InterpSinInOut(m_PrevChangeCameraPos.X, (m_TargetPos.X + m_Distance), alpha);
+		locationTmp.Z = FMath::InterpSinInOut(m_PrevChangeCameraPos.Z, m_TargetPos.Z, alpha);
+		SetActorLocation(locationTmp);
+
 		// カメラの移動を行うか判定する
 		if (FMath::Abs(relativeDistance) > m_LenghWidth)
 		{
 			if ((relativeDistance > 0) && (m_pPlayerActor->GetActorRotation().Yaw >= 0))
 			{
 				m_FrontPos = FVector(0.0f, m_AdjustmentPos.Y, m_AdjustmentPos.Z);
-
 				m_Right = false;
-
 				m_Move = true;
-
 			}
 			else if ((relativeDistance < 0) && (m_pPlayerActor->GetActorRotation().Yaw <= -80.0f))
 			{
 				m_FrontPos = FVector(0.0f, -m_AdjustmentPos.Y, m_AdjustmentPos.Z);
-
 				m_Right = true;
-
 				m_Move = true;
-
 			}
 		}
 	}
-
-	// 縦移動分を加算
-	move.Z = (targetPos.Z - GetActorLocation().Z) / m_SpeedHight;
-
-	// コントローラーからの入力によってカメラを移動
-	move += m_MoveCamera;
-
-	// カメラをもとの座標に戻す
-	m_MoveCamera -= FVector(0.0f, m_MoveCamera.Y / m_CameraMoveReturn.Y, m_MoveCamera.Z / m_CameraMoveReturn.Z);
-
-	// 移動
-	SetActorLocation(GetActorLocation() + move);
-
+	
 	// 時間をカウント（松中）
 	m_CountTime += _deltaTime;
 }
