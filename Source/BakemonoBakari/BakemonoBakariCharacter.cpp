@@ -73,7 +73,8 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->GravityScale = 4.0f;
 	GetCharacterMovement()->AirControl = 0.80f;
-	GetCharacterMovement()->JumpZVelocity = 1400.f; //ジャンプ量調整
+	//GetCharacterMovement()->JumpZVelocity = 1400.f; //ジャンプ量調整
+	GetCharacterMovement()->JumpZVelocity = 1200.f;	  //ジャンプ量調整
 	GetCharacterMovement()->GroundFriction = 3.f;
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
