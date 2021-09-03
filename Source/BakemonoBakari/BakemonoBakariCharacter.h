@@ -207,8 +207,8 @@ public:
 	bool GetIsJump() { return IsJump; }
 
 private:
-	void CheckLine();											// ライントレースを用いて足元に地面があるか調べる
-
+	void CheckLine();										// ライントレースを用いて足元に地面があるか調べる
+	bool CheckUnderActor(UPrimitiveComponent* _pComponent);	// 足元のコンポーネントが同じ物か調べる
 private:
 	Player_Info m_info;						//プレイヤー情報
 	FVector m_ReStartPos;					// プレイヤーのリスポーン座標

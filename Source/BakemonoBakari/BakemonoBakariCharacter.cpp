@@ -400,7 +400,7 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		if (OtherActor->ActorHasTag("Enemy"))
 		{
 			// デバッグモードならダメージを受けない
-			if (!IsDebug) 
+			if (!IsDebug)
 			{
 				IsEnemyContack = true;								//Overlapしている
 				EnemyLocation = OtherActor->GetActorLocation().Y;	//Overlapする敵の位置を取得
@@ -470,7 +470,7 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		}
 		else if (OtherActor->ActorHasTag("Ground"))
 		{
-			if ((m_pCamera) && (OtherActor->GetActorLocation().Z < GetActorLocation().Z))
+			if(CheckUnderActor(OtherComp))
 			{
 				m_pCamera->SearchSpline();
 				if (!m_IsGround)
@@ -592,8 +592,43 @@ void ABakemonoBakariCharacter::CheckLine()
 			isGround = true;
 		}
 	}
+	if (!isGround)
+		m_IsGround = false;
+}
+// --------------------------------------------------------------------------------------------------------------------------------------------------
 
-	if(!isGround)
-	m_IsGround = false;
+// ライントレースを利用して前方あるアクターを判別して行動パターンを変える--------------------------------------------------------------------------------------------
+bool ABakemonoBakariCharacter::CheckUnderActor(UPrimitiveComponent* _pComponent)
+{
+	// ライントレースの開始地点と、終点を設定
+	FVector start = GetActorLocation();
+	FVector end = start;
+	FVector cenetr;
+	FVector meshSize;
+	GetActorBounds(true, cenetr, meshSize);
+
+	end.Z -= meshSize.Z;
+
+	// 自分はあたらないようにする
+	FCollisionQueryParams collisionParmas;
+	collisionParmas.AddIgnoredActor(this);
+
+	// 当たった対象を調べる
+	TArray<FHitResult> outHit;
+
+	bool isHit = GetWorld()->LineTraceMultiByChannel(outHit, start, end, ECC_WorldStatic, collisionParmas);
+	for (int n = 0; n < outHit.Num(); ++n)
+	{
+		// 当たっていないなら返す
+		if (!isHit)return false;
+
+		if (outHit[n].GetComponent() == nullptr)return false;;
+
+		if (outHit[n].GetComponent() == _pComponent)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------
