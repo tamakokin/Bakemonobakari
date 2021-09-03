@@ -13,7 +13,7 @@
 // 2021/07/08 更新者：伴野　梯子を登り切った際の処理を追加
 // 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
-
+// 2021/09/01 更新者：上田　最高速になるまで時間がかかるように修正
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -42,6 +42,9 @@ ABakemonoBakariCharacter::ABakemonoBakariCharacter()
 	, IsEnemyContack(false)		// オブジェクトと接触しているフラグ 5/19
 	, EnemyLocation(0.0)		// 敵の水平位置 5/19
 	, m_Horizontal(0.f)			// 水平方向の入力値保持
+	, m_MoveValue(0.f)			// プレイヤーの実際の移動量 9/1
+	, m_MoveFrameCount(0.f)		// プレイヤーが最高速になるまでのフレームカウント 9/1
+	, m_MoveFrame(60.f)			// 最高速になるまでのフレーム数 9/1
 {
 	//毎フレーム、クラスのTick()を呼ぶかどうかを決めるフラグ
 	PrimaryActorTick.bCanEverTick = true;
@@ -184,6 +187,23 @@ void ABakemonoBakariCharacter::InputRight(float Value)
 {
 	InputValue.X = Value;
 	m_Horizontal = Value;
+
+	// 9/1最高速になるためのフレームカウント　上田
+	float tempValue = abs(Value);
+	if (tempValue < 1.0f)
+	{
+		if (m_MoveValue > 0.0f)
+		{
+			m_MoveValue -= 1.0f;
+		}
+	}
+	else if (tempValue == 1.0f)
+	{
+		if (m_MoveFrameCount < m_MoveFrame)
+		{
+			m_MoveFrameCount += 1.0f;
+		}
+	}
 }
 
 // 上下入力の値を受け取って変数に保存する関数 7/5伴野
@@ -205,6 +225,12 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 			//EndRotation.Yaw = StartRotation.Yaw;
 			if (!IsLadder)		// 梯子を掴んでいるときは移動できない
 			{
+				// 入力量の補正(Clamp) 9/1 上田
+				if (m_MoveFrameCount < 3.f)
+				{
+					m_MoveFrameCount += 3.f;
+				}
+
 				// 梯子を掴んでいないが梯子の近くにいるとき
 				if (LadderDir != ELadderDirection::LD_None)
 				{
@@ -218,23 +244,30 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 
 				if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
 				{
+					// 入力量の補正
+					float tempValue;
+					tempValue = Value * (m_MoveFrameCount / m_MoveFrame);
+
 					//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
 					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+
 					SetActorRotation(FRotator(0.f, -90.f, 0.f));
+
 					// add movement in that direction
-					AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+					AddMovementInput(FVector(0.f, -1.f, 0.f), tempValue);
 					IsFaceRight = true;
 				}
-				else
+				else if (Value < 0.0)
 				{
-					if (Value < 0.0)
-					{
-						//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
-						SetActorRotation(FRotator(0.f, 90.f, 0.f));
-						// add movement in that direction
-						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-						IsFaceRight = false;
-					}
+					// 入力量の補正
+					float tempValue;
+					tempValue = Value * (m_MoveFrameCount / m_MoveFrame);
+
+					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+					SetActorRotation(FRotator(0.f, 90.f, 0.f));
+					// add movement in that direction
+					AddMovementInput(FVector(0.f, -1.f, 0.f), tempValue);
+					IsFaceRight = false;
 				}
 			}
 		}
@@ -466,7 +499,7 @@ void ABakemonoBakariCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		{
 			m_ReStartPos = GetActorLocation();
 
-			UE_LOG(LogTemp, Warning, TEXT("HIT"));
+			//UE_LOG(LogTemp, Warning, TEXT("HIT"));
 		}
 		else if (OtherActor->ActorHasTag("Ground"))
 		{

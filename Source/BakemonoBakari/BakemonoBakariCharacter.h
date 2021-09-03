@@ -14,6 +14,7 @@
 // 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 // 2021/08/27 更新者：松中　ジャンプフラグを外部から取得できるように更新
+// 2021/09/01 更新者：上田　最高速になるまで時間がかかるように修正
 #pragma once
 
 #include "CoreMinimal.h"
@@ -213,6 +214,10 @@ private:
 	Player_Info m_info;						//プレイヤー情報
 	FVector m_ReStartPos;					// プレイヤーのリスポーン座標
 	USkeletalMeshComponent* m_pMesh;		// メッシュ
-	float m_Horizontal;						//水平方向の入力値保持
+	float m_Horizontal;						//水平方向の入力値保持(BPで使用)
 	bool m_IsGround;						// 接地しているかどうか
+
+	float m_MoveValue;						// プレイヤーの実際の移動量
+	float m_MoveFrameCount;					// プレイヤーが最高速になるまでのフレームカウント
+	float m_MoveFrame;						// 最高速になるまでのフレーム数
 };
