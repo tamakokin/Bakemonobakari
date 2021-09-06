@@ -132,6 +132,23 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 		ClimbLadder(DeltaTime);
 	}
 
+	// 9/1最高速になるためのフレームカウント　上田
+	float tempValue = abs(InputValue.X);
+	if (tempValue == 1.0f)
+	{
+		if (m_MoveFrameCount < m_MoveFrame)
+		{
+			m_MoveFrameCount += 1.0f;
+		}
+	}
+	else
+	{
+		if (m_MoveFrameCount > 0.0f)
+		{
+			m_MoveFrameCount -= 1.0f;
+		}
+	}
+
 	// 左右入力を反映させる 7/5伴野
 	MoveRight(InputValue.X);
 	MoveUp(InputValue.Y);
@@ -187,23 +204,6 @@ void ABakemonoBakariCharacter::InputRight(float Value)
 {
 	InputValue.X = Value;
 	m_Horizontal = Value;
-
-	// 9/1最高速になるためのフレームカウント　上田
-	float tempValue = abs(Value);
-	if (tempValue < 1.0f)
-	{
-		if (m_MoveValue > 0.0f)
-		{
-			m_MoveValue -= 1.0f;
-		}
-	}
-	else if (tempValue == 1.0f)
-	{
-		if (m_MoveFrameCount < m_MoveFrame)
-		{
-			m_MoveFrameCount += 1.0f;
-		}
-	}
 }
 
 // 上下入力の値を受け取って変数に保存する関数 7/5伴野
@@ -216,6 +216,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 {
 	if (IsInputFadeIn == false)	//フェードイン時は移動できない
 	{
+		
 		if (IsAttack == false && IsDamage == false && IsDead == false) //攻撃している時あるいはダメージを受けている時に移動できない　4/23
 		{
 			//FRotator StartRotation;
@@ -226,9 +227,9 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 			if (!IsLadder)		// 梯子を掴んでいるときは移動できない
 			{
 				// 入力量の補正(Clamp) 9/1 上田
-				if (m_MoveFrameCount < 3.f)
+				if (m_MoveFrameCount < 10.f)
 				{
-					m_MoveFrameCount += 3.f;
+					m_MoveFrameCount += 10.f;
 				}
 
 				// 梯子を掴んでいないが梯子の近くにいるとき

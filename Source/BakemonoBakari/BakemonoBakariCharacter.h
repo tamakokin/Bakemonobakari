@@ -146,6 +146,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 		float EnemyLocation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		float FrameCount;
+
 	// ¶‰Eã‰º“ü—Í‚Ì’l‚ğ•Û‘¶‚·‚é•Ï” 7/5”º–ì
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		FVector2D InputValue;
