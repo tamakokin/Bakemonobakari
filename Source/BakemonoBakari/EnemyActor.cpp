@@ -7,6 +7,7 @@
 //			：2021/5/23 消滅時の音を追加（伴野）
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 //			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
+//			：2021/9/ 7 倒した際にUIメッセージを出す 
 
 #include "EnemyActor.h"
 #include "MyGameInstance.h"
@@ -101,7 +102,6 @@ void AEnemyActor::Tick(float DeltaTime)
 	}
 	else if ((m_EnemyState != ENEMY_STATE_DESTROY) && (m_EnemyDamageCount <= 0))
 	{
-
 		// 行動可能状態にする
 		m_IsAction = true;
 		m_IsInScreen = true;
@@ -202,6 +202,18 @@ void AEnemyActor::Des()
 
 	// スコアを加算する
 	Cast<UMyGameInstance>(GetGameInstance())->AddScore(m_score, SCORE_TYPE::SCORE_TYPE_NORMAL_ENEMY);
+	
+	// スコアUIを出現させる
+	//if (m_pEnemyScore != NULL)
+	{
+		AEnemyScore* m_pEnemyScore;
+		FString ScorePath = "/Game/Blueprints/EnemyScore.EnemyScore_C";
+		TSubclassOf<class AActor> subClass = TSoftClassPtr<AActor>(FSoftObjectPath(ScorePath)).LoadSynchronous();
+
+		m_pEnemyScore = GetWorld()->SpawnActor<AEnemyScore>(subClass, GetActorLocation(), FRotator(0.f, 180.f, 0.f));
+		m_pEnemyScore->SetScore(m_score);
+	}
+
 	// 倒しきった音を出す
 	if (m_EnemyLethalDamageSound != NULL)
 	{
@@ -264,8 +276,6 @@ void AEnemyActor::ReStartPosition()
 
 	SetActorLocation(m_initEnemyPosition);
 	SetActorRotation(m_StartRote);
-
-	m_IsAction = true;
 
 	// マテリアル側の「Opacity」パラメータに数値を設定する
 	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));
