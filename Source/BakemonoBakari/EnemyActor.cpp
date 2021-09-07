@@ -101,6 +101,7 @@ void AEnemyActor::Tick(float DeltaTime)
 	}
 	else if ((m_EnemyState != ENEMY_STATE_DESTROY) && (m_EnemyDamageCount <= 0))
 	{
+
 		// 行動可能状態にする
 		m_IsAction = true;
 		m_IsInScreen = true;
@@ -263,6 +264,8 @@ void AEnemyActor::ReStartPosition()
 
 	SetActorLocation(m_initEnemyPosition);
 	SetActorRotation(m_StartRote);
+
+	m_IsAction = true;
 
 	// マテリアル側の「Opacity」パラメータに数値を設定する
 	m_pEnemyMesh->SetVectorParameterValueOnMaterials(TEXT("Flashing"), FVector(0.0f, 0.0f, 0.0f));

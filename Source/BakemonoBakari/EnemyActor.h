@@ -55,6 +55,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 		void MeshOff();
 
+	// メッシュ情報を返す
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+		UMeshComponent* GetMesh() { return m_pEnemyMesh; }
+
 	// ヒットエフェクトを出す処理
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
 		void Hit();
