@@ -8,13 +8,16 @@
 //			：2021/5/24 様々な敵形態を追加
 //			：2021/5/29 画面外にいる場合は動かないようにする（大金）
 //			：2021/6/ 9 アニメーションに必要な要素の追加
-//			：2021/6/7  リスタート時にエネミーを初期化する
+//			：2021/6/ 7 リスタート時にエネミーを初期化する
 //			：			エネミーがやられた場合非表示にする
 //			：2021/8/17 倒しきったかどうかで与ダメージ音を切り替えるように（伴野）
+//			：2021/9/ 7 倒した際にUIメッセージを出す 
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "EnemyScore.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnemyActor.generated.h"
@@ -54,10 +57,6 @@ public:
 	// メッシュの非表示処理
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 		void MeshOff();
-
-	// メッシュ情報を返す
-	UFUNCTION(BlueprintCallable, Category = "Enemy")
-		UMeshComponent* GetMesh() { return m_pEnemyMesh; }
 
 	// ヒットエフェクトを出す処理
 	UFUNCTION(BlueprintImplementableEvent, Category = "Enemy")
@@ -165,10 +164,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int m_DamageEndTiming;						// ダメージによって無敵時間が終了するタイミング
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class USoundBase* m_EnemyDamageSound;		// 与ダメージ時の音
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class USoundBase* m_EnemyLethalDamageSound;	// 倒しきった時の音
 
 private:
