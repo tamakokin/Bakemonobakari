@@ -14,6 +14,7 @@
 // 2021/08/19 更新者：上田　移動攻撃時の慣性を追加
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 // 2021/09/01 更新者：上田　最高速になるまで時間がかかるように修正
+// 2021/09/08 更新者：上田　移動時の慣性を追加
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -296,28 +297,35 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 			}
 		}
 
-		// 攻撃後の慣性
-		if (IsAttack)
+		// 移動後慣性
+		if (m_MoveFrameCount > 40.0f && !IsAttack && !IsDamage && !IsDead)
 		{
-			if (Value > 0.0)     //プレイヤーが必ず移動方向に回転する処理 5/4
+			if (IsFaceRight)     //プレイヤーが必ず移動方向に回転する処理 5/4
 			{
+				// 入力量の補正
+				float tempValue;
+				tempValue = 0.5f * (m_MoveFrameCount / m_MoveFrame);
+
 				//NewRotation() = FMath::Lerp(FRotator(0.f, 180.f, 0.f), FRotator(0.f, 0.f, 0.f), );
 				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+
 				SetActorRotation(FRotator(0.f, -90.f, 0.f));
+
 				// add movement in that direction
-				AddMovementInput(FVector(0.f, -1.f, 0.f), 0.1f);
+				AddMovementInput(FVector(0.f, -1.f, 0.f), tempValue);
 				IsFaceRight = true;
 			}
-			else
+			else if (!IsFaceRight)
 			{
-				if (Value < 0.0)
-				{
-					//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
-					SetActorRotation(FRotator(0.f, 90.f, 0.f));
-					// add movement in that direction
-					AddMovementInput(FVector(0.f, -1.f, 0.f), -0.1f);
-					IsFaceRight = false;
-				}
+				// 入力量の補正
+				float tempValue;
+				tempValue = -0.5f * (m_MoveFrameCount / m_MoveFrame);
+
+				//SetActorRotation(FMath::RInterpTo(StartRotation, EndRotation, GetWorld()->GetDeltaSeconds(), 500));
+				SetActorRotation(FRotator(0.f, 90.f, 0.f));
+				// add movement in that direction
+				AddMovementInput(FVector(0.f, -1.f, 0.f), tempValue);
+				IsFaceRight = false;
 			}
 		}
 	}
