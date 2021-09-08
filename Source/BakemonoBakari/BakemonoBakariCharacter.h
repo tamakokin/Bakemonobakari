@@ -97,6 +97,10 @@ protected:
 		void ReStart();
 public:
 	// デバッグモードかのフラグ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
+		float Recovery;
+
+	// デバッグモードかのフラグ
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 		bool IsDebug;
 

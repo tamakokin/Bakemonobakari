@@ -15,6 +15,7 @@
 // 2021/08/20 更新者：山田　回復アイテムを取得したらhpを増やす処理
 // 2021/09/01 更新者：上田　最高速になるまで時間がかかるように修正
 // 2021/09/08 更新者：上田　移動時の慣性を追加
+// 2021/09/08 更新者：上田　回復アイテムの回復量をBP上で変えられるように変更、回復処理の修正
 #include "BakemonoBakariCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -173,7 +174,7 @@ void ABakemonoBakariCharacter::Tick(float DeltaTime)
 	//Overlapしている時回復処理 8/20
 	if (IsRecoveryContack == true)
 	{
-		TakeRecovery(10.0f);
+		TakeRecovery(Recovery);
 	}
 
 	SetActorLocation(FVector(0.0f, GetActorLocation().Y, GetActorLocation().Z));
@@ -300,7 +301,7 @@ void ABakemonoBakariCharacter::MoveRight(float Value)
 		// 移動後慣性
 		if (m_MoveFrameCount > 40.0f && !IsAttack && !IsDamage && !IsDead)
 		{
-			if (IsFaceRight)     //プレイヤーが必ず移動方向に回転する処理 5/4
+			if (IsFaceRight) 
 			{
 				// 入力量の補正
 				float tempValue;
@@ -407,9 +408,14 @@ void ABakemonoBakariCharacter::TakeDamage(float _dmg)
 //回復処理 8/20
 void ABakemonoBakariCharacter::TakeRecovery(float _recovery)
 {
-	if (m_info.hp < 100.0)
+	float tempHP = m_info.hp + _recovery;
+	if (tempHP >= 100.f)
 	{
-		m_info.hp += _recovery;
+		m_info.hp = 100.f;
+	}
+	else if (tempHP < 100.f)
+	{
+		m_info.hp = tempHP;
 	}
 	IsRecoveryContack = false;
 }
