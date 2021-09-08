@@ -49,13 +49,20 @@ AEnemyActor::AEnemyActor()
 	m_pCheckInScreen = CreateDefaultSubobject<UCheckInScreen>(TEXT("CheckInScreen"));
 	
 	// 方向転換を行うコンポーネントの生成
-	m_pEnemyRote = CreateDefaultSubobject<UEnemy_Rote_Component>(TEXT("UEnemy_Rote_Component"));
+	m_pEnemyRote = Cast<UEnemy_Rote_Component>(GetComponentByClass(UEnemy_Rote_Component::StaticClass()));
 }
 
 // ゲームスタート時、または生成時に呼ばれる処理
 void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// コンポーネントの取得
+	if (!m_pEnemyRote) 
+	{
+		m_pEnemyRote = Cast<UEnemy_Rote_Component>(GetComponentByClass(UEnemy_Rote_Component::StaticClass()));
+	}
+
 
 	// 初期位置の取得
 	m_initEnemyPosition = GetActorLocation();
@@ -187,6 +194,8 @@ void AEnemyActor::EnemyDamage()
 // 死亡処理------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void AEnemyActor::Des() 
 {
+	if (!m_pEnemyRote)return;
+
 	// 死亡アニメーション再生
 	m_EnemyState = ENEMY_STATE_DESTROY;
 	ChangeAnim();
